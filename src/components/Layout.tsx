@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LayoutGrid, CheckSquare, Bell, ChevronRight, FileText, Home as HomeIcon, BookOpen } from 'lucide-react';
+import { LayoutGrid, CheckSquare, Bell, ChevronRight, FileText, Home as HomeIcon, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 import { categories, recipes } from '../data/mockData';
 
 const Layout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     // Generate breadcrumbs based on current route
     const breadcrumbs = useMemo(() => {
@@ -61,6 +63,14 @@ const Layout: React.FC = () => {
                 {/* Right Utilities */}
                 <div className="flex items-center justify-end gap-3 w-1/3 shrink-0">
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="w-8 h-8 rounded text-content-muted hover:bg-surface-background flex items-center justify-center transition-colors"
+                            title={isSidebarOpen ? "Enter Fullscreen (Hide Sidebar)" : "Exit Fullscreen (Show Sidebar)"}
+                        >
+                            {isSidebarOpen ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+                        </button>
+
                         <button className="w-8 h-8 rounded bg-blue-50 text-brand-blue flex items-center justify-center hover:bg-blue-100 transition-colors">
                             <CheckSquare size={16} fill="currentColor" className="text-brand-blue" />
                         </button>
@@ -84,24 +94,26 @@ const Layout: React.FC = () => {
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Side Navigation */}
-                <aside className="w-[72px] bg-surface-card border-r border-surface-border flex flex-col items-center py-6 shrink-0 z-10">
-                    <button
-                        onClick={() => navigate('/')}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${location.pathname === '/' ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
-                    >
-                        <HomeIcon size={24} />
-                    </button>
-                    <button
-                        onClick={() => navigate('/categories')}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${location.pathname === '/categories' ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
-                    >
-                        <BookOpen size={24} />
-                    </button>
-                </aside>
+                {isSidebarOpen && (
+                    <aside className="w-[72px] bg-surface-card border-r border-surface-border flex flex-col items-center py-6 shrink-0 z-10 transition-all duration-300">
+                        <button
+                            onClick={() => navigate('/')}
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${location.pathname === '/' ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
+                        >
+                            <HomeIcon size={24} />
+                        </button>
+                        <button
+                            onClick={() => navigate('/categories')}
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${location.pathname === '/categories' ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
+                        >
+                            <BookOpen size={24} />
+                        </button>
+                    </aside>
+                )}
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto p-8 relative">
-                    <div className="max-w-7xl mx-auto h-full space-y-6">
+                <main className="flex-1 overflow-y-auto p-10 relative">
+                    <div className="w-full h-full space-y-6">
                         <Outlet />
                     </div>
                 </main>

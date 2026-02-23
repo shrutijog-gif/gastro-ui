@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, CheckCircle, X, Link as LinkIcon } from 'lucide-react';
-import { recipes } from '../data/mockData';
+import { recipes, categories } from '../data/mockData';
 import type { Recipe, Ingredient } from '../data/mockData';
 
 // Helper to auto-link ingredient names in instruction text
@@ -364,76 +364,98 @@ const RecipeDetail: React.FC = () => {
         return <div className="p-8 text-center text-content-muted animate-pulse">Loading...</div>;
     }
 
-    return (
-        <div className="h-full relative overflow-hidden rounded-xl border border-surface-border shadow-sm flex bg-surface-background">
+    const baseRecipe = recipes.find(r => r.id === recipeStack[0]);
+    const categoryId = baseRecipe?.categoryId;
 
-            {/* Display Mode Toggle (visible only on base recipe) */}
-            <div className="absolute top-4 right-1/4 z-40 bg-white/80 backdrop-blur-md border border-brand-blue/20 rounded-full p-1 flex items-center shadow-lg">
-                <button
-                    onClick={() => setDisplayMode('stack')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${displayMode === 'stack' ? 'bg-brand-blue text-white shadow-sm' : 'text-content-secondary hover:text-brand-blue'}`}
-                >
-                    Overlay Mode
-                </button>
-                <button
-                    onClick={() => setDisplayMode('sticky')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${displayMode === 'sticky' ? 'bg-amber-400 text-amber-950 shadow-sm' : 'text-content-secondary hover:text-amber-600'}`}
-                >
-                    Sticky Note Mode
-                </button>
+    return (
+        <div className="h-full flex flex-col animate-fade-in-up">
+            {/* Edge-to-Edge Category Strip */}
+            <div className="absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 px-10">
+                <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar w-full">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => navigate(`/items/${cat.id}`)}
+                            className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap border ${cat.id === categoryId
+                                ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                                : 'bg-surface-background text-content-secondary border-surface-border hover:border-brand-blue/40'
+                                }`}
+                        >
+                            {cat.name}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {recipeStack.map((id, index) => {
-                const recipe = recipes.find(r => r.id === id);
-                if (!recipe) return null;
+            {/* Main Recipe Detail Container */}
+            <div className="flex-1 relative overflow-hidden rounded-xl border border-surface-border shadow-sm flex bg-surface-background mt-12">
+                <div className="absolute top-4 right-1/4 z-40 bg-white/80 backdrop-blur-md border border-brand-blue/20 rounded-full p-1 flex items-center shadow-lg">
+                    <button
+                        onClick={() => setDisplayMode('stack')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${displayMode === 'stack' ? 'bg-brand-blue text-white shadow-sm' : 'text-content-secondary hover:text-brand-blue'}`}
+                    >
+                        Overlay Mode
+                    </button>
+                    <button
+                        onClick={() => setDisplayMode('sticky')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${displayMode === 'sticky' ? 'bg-amber-400 text-amber-950 shadow-sm' : 'text-content-secondary hover:text-amber-600'}`}
+                    >
+                        Sticky Note Mode
+                    </button>
+                </div>
 
-                const isBase = index === 0;
+                {recipeStack.map((id, index) => {
+                    const recipe = recipes.find(r => r.id === id);
+                    if (!recipe) return null;
 
-                if (isBase) {
-                    // Base recipe always takes full width at z-0
-                    return (
-                        <div key={`${id}-${index}`} className="absolute inset-0 z-0">
-                            <RecipeContent
+                    const isBase = index === 0;
+
+                    if (isBase) {
+                        // Base recipe always takes full width at z-0
+                        return (
+                            <div key={`${id}-${index}`} className="absolute inset-0 z-0">
+                                <RecipeContent
+                                    recipe={recipe}
+                                    depth={index}
+                                    onClose={() => handleClose(index)}
+                                    onIngredientClick={handleIngredientClick}
+                                />
+                            </div>
+                        );
+                    }
+
+                    // Sub-recipes render based on displayMode
+                    if (displayMode === 'stack') {
+                        return (
+                            <div
+                                key={`${id}-${index}`}
+                                className="absolute inset-y-0 right-0 transition-all duration-300 ease-in-out bg-surface-card shadow-[-10px_0_30px_-5px_rgba(0,0,0,0.3)] border-l border-surface-border"
+                                style={{
+                                    width: '92%',
+                                    zIndex: index * 10
+                                }}
+                            >
+                                <RecipeContent
+                                    recipe={recipe}
+                                    depth={index}
+                                    onClose={() => handleClose(index)}
+                                    onIngredientClick={handleIngredientClick}
+                                />
+                            </div>
+                        );
+                    } else {
+                        // Sticky Note Mode
+                        return (
+                            <DraggableStickyNote
+                                key={`${id}-${index}`}
                                 recipe={recipe}
-                                depth={index}
+                                index={index}
                                 onClose={() => handleClose(index)}
-                                onIngredientClick={handleIngredientClick}
                             />
-                        </div>
-                    );
-                }
-
-                // Sub-recipes render based on displayMode
-                if (displayMode === 'stack') {
-                    return (
-                        <div
-                            key={`${id}-${index}`}
-                            className="absolute inset-y-0 right-0 transition-all duration-300 ease-in-out bg-surface-card shadow-[-10px_0_30px_-5px_rgba(0,0,0,0.3)] border-l border-surface-border"
-                            style={{
-                                width: '92%',
-                                zIndex: index * 10
-                            }}
-                        >
-                            <RecipeContent
-                                recipe={recipe}
-                                depth={index}
-                                onClose={() => handleClose(index)}
-                                onIngredientClick={handleIngredientClick}
-                            />
-                        </div>
-                    );
-                } else {
-                    // Sticky Note Mode
-                    return (
-                        <DraggableStickyNote
-                            key={`${id}-${index}`}
-                            recipe={recipe}
-                            index={index}
-                            onClose={() => handleClose(index)}
-                        />
-                    );
-                }
-            })}
+                        );
+                    }
+                })}
+            </div>
         </div>
     );
 };

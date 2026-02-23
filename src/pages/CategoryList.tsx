@@ -23,19 +23,22 @@ const CategoryList: React.FC = () => {
                     <button
                         key={category.id}
                         onClick={() => navigate(`/items/${category.id}`)}
-                        className="group relative h-56 rounded-xl overflow-hidden border border-surface-border hover:border-brand-blue/50 transition-all duration-300 shadow-sm hover:shadow-lg bg-surface-card"
+                        className="group relative flex flex-col h-56 rounded-xl overflow-hidden border border-surface-border hover:border-brand-blue/50 transition-all duration-300 shadow-sm hover:shadow-lg bg-surface-card"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-t from-content-primary/90 via-content-primary/30 to-transparent z-10" />
-                        <div
-                            className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
-                            style={{ backgroundImage: `url(${category.image})` }}
-                        />
+                        {/* Image Container */}
+                        <div className="relative w-full flex-1 overflow-hidden">
+                            <div
+                                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
+                                style={{ backgroundImage: `url(${category.image})` }}
+                            />
+                        </div>
 
-                        <div className="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col items-start">
-                            <span className="text-lg font-bold truncate w-full text-left text-white group-hover:text-brand-light transition-colors drop-shadow-md">
+                        {/* Text Container Below Image */}
+                        <div className="w-full p-4 bg-surface-card flex flex-col items-start border-t border-surface-border">
+                            <span className="text-base font-bold truncate w-full text-left text-content-primary group-hover:text-brand-blue transition-colors">
                                 {category.name}
                             </span>
-                            <span className="text-xs text-surface-background mt-1 font-medium opacity-90">12 Recipes</span>
+                            <span className="text-xs text-content-secondary mt-1 font-medium">12 Recipes</span>
                         </div>
                     </button>
                 ))}

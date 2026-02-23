@@ -16,33 +16,9 @@ const ItemList: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col animate-fade-in-up">
-            {/* Header & Controls */}
-            <div className="bg-surface-card rounded-xl border border-surface-border p-4 mb-6 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigate('/categories')}
-                            className="p-2 rounded-lg text-content-muted hover:bg-surface-background hover:text-content-primary transition-colors border border-transparent hover:border-surface-border"
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
-                        <h1 className="text-xl font-bold text-content-primary tracking-tight">{activeCategory?.name || 'Items'}</h1>
-                    </div>
-
-                    <div className="relative w-full md:w-80">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Search recipes..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-sm rounded-brand border border-surface-border bg-surface-background focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue transition-all"
-                        />
-                    </div>
-                </div>
-
-                {/* Category Strip */}
-                <div className="flex overflow-x-auto gap-2 mt-4 pt-4 border-t border-surface-border no-scrollbar pb-1">
+            {/* Edge-to-Edge Category Strip */}
+            <div className="absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 px-10">
+                <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar w-full">
                     {categories.map((cat) => (
                         <button
                             key={cat.id}
@@ -58,16 +34,40 @@ const ItemList: React.FC = () => {
                 </div>
             </div>
 
+            {/* Header & Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 mt-12">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/categories')}
+                        className="p-2 rounded-lg text-content-muted hover:bg-surface-card hover:text-content-primary transition-colors border border-transparent hover:border-surface-border"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="text-2xl font-bold text-content-primary tracking-tight">{activeCategory?.name || 'Items'}</h1>
+                </div>
+
+                <div className="relative w-full sm:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search recipes..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-sm rounded-brand border border-surface-border bg-surface-background focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue transition-all shadow-sm"
+                    />
+                </div>
+            </div>
+
             {/* Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {categoryRecipes.length > 0 ? (
                     categoryRecipes.map((recipe) => (
                         <button
                             key={recipe.id}
                             onClick={() => navigate(`/recipe/${recipe.id}`)}
-                            className="group bg-surface-card rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-surface-border text-left flex flex-col h-full hover:border-brand-blue/30"
+                            className="group bg-surface-card rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-surface-border text-left flex flex-col h-full hover:border-brand-blue/30 w-full"
                         >
-                            <div className="relative h-44 overflow-hidden bg-surface-background border-b border-surface-border">
+                            <div className="relative h-44 w-full overflow-hidden bg-surface-background border-b border-surface-border">
                                 <div
                                     className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
                                     style={{ backgroundImage: `url(${recipe.image})` }}
@@ -77,12 +77,15 @@ const ItemList: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="p-4 flex-1 flex flex-col">
+                            <div className="p-4 flex-1 flex flex-col w-full">
                                 <h3 className="text-base font-bold text-content-primary mb-1 group-hover:text-brand-blue transition-colors line-clamp-2">
                                     {recipe.name}
                                 </h3>
+                                <p className="text-xs text-content-secondary line-clamp-1 mb-3">
+                                    Classic preparation style
+                                </p>
 
-                                <div className="mt-auto pt-3 flex items-center gap-4 text-xs text-content-muted font-medium">
+                                <div className="mt-auto flex items-center gap-4 text-xs text-content-muted font-medium">
                                     <div className="flex items-center gap-1.5 bg-surface-background px-2 py-1 rounded border border-surface-border">
                                         <Clock size={12} className="text-brand-blue" />
                                         {recipe.prepTime}
