@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
-import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, CheckCircle, X, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, X, Link as LinkIcon } from 'lucide-react';
 import { recipes, categories } from '../data/mockData';
 import type { Recipe, Ingredient } from '../data/mockData';
 
@@ -72,9 +72,6 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                         )}
                         {recipe.name}
                     </h1>
-                    <span className="px-3 py-1 bg-brand-light text-brand-blue rounded-md text-[10px] uppercase font-bold tracking-wider border border-brand-blue/20 flex items-center gap-1">
-                        <CheckCircle size={12} /> {depth === 0 ? 'FINISHED' : 'PREP'}
-                    </span>
                 </div>
 
                 <div className="flex gap-4 text-sm font-medium text-content-secondary">
