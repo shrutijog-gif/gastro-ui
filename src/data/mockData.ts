@@ -14,6 +14,7 @@ export interface Instruction {
 
 export interface Recipe {
     id: string;
+    serialNumber?: string;
     name: string;
     categoryId: string;
     image: string;
@@ -44,6 +45,7 @@ export const recipes: Recipe[] = [
     // --- BURGERS ---
     {
         id: 'ch-burger',
+        serialNumber: 'SR-004',
         name: 'Classic Cheese Burger',
         categoryId: 'burger',
         image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800',
@@ -69,6 +71,7 @@ export const recipes: Recipe[] = [
     // --- SEMI-FINISHED / PREPS ---
     {
         id: 'burger-sauce',
+        serialNumber: 'SR-003',
         name: 'Signature Burger Sauce',
         categoryId: 'burger', // Technically a prep, but categorizing here for mock simplicity
         image: 'https://images.unsplash.com/photo-1472476449509-f06b6b553ced?auto=format&fit=crop&q=80&w=800',
@@ -91,6 +94,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'tru-burger',
+        serialNumber: 'SR-007',
         name: 'Truffle Mushroom Burger',
         categoryId: 'burger',
         image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=800',
@@ -112,6 +116,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'spicy-chk-burger',
+        serialNumber: 'SR-009',
         name: 'Spicy Chicken Burger',
         categoryId: 'burger',
         image: 'https://images.unsplash.com/photo-1615297348957-84d797c55d99?auto=format&fit=crop&q=80&w=800',
@@ -134,6 +139,7 @@ export const recipes: Recipe[] = [
     // --- PIZZAS ---
     {
         id: 'marg-pizza',
+        serialNumber: 'SR-005',
         name: 'Margherita Pizza',
         categoryId: 'pizza',
         image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=800',
@@ -157,6 +163,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'pep-pizza',
+        serialNumber: 'SR-010',
         name: 'Pepperoni Feast',
         categoryId: 'pizza',
         image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=800',
@@ -177,6 +184,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'bbq-chk-pizza',
+        serialNumber: 'SR-011',
         name: 'BBQ Chicken Pizza',
         categoryId: 'pizza',
         image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=800',
@@ -200,6 +208,7 @@ export const recipes: Recipe[] = [
     // --- APPETIZERS ---
     {
         id: 'dyn-shrimp',
+        serialNumber: 'SR-001',
         name: 'Dynamite Shrimp',
         categoryId: 'appetizer',
         image: 'https://images.unsplash.com/photo-1625938145744-e3805154121c?auto=format&fit=crop&q=80&w=800',
@@ -219,6 +228,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'moz-sticks',
+        serialNumber: 'SR-002',
         name: 'Mozzarella Sticks',
         categoryId: 'appetizer',
         image: 'https://images.unsplash.com/photo-1531749668029-2db88e4276c7?auto=format&fit=crop&q=80&w=800',
@@ -236,6 +246,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'cal-fritti',
+        serialNumber: 'SR-006',
         name: 'Calamari Fritti',
         categoryId: 'appetizer',
         image: 'https://images.unsplash.com/photo-1604909052743-94e838986d24?auto=format&fit=crop&q=80&w=800',
@@ -255,6 +266,7 @@ export const recipes: Recipe[] = [
     },
     {
         id: 'ch-fries',
+        serialNumber: 'SR-008',
         name: 'Cheesy Fries',
         categoryId: 'appetizer',
         image: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&q=80&w=800',

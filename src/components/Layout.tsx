@@ -112,9 +112,9 @@ const Layout: React.FC = () => {
                 )}
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto p-10 relative">
+                <main className={`flex-1 overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? 'p-10' : 'p-0'}`}>
                     <div className="w-full h-full space-y-6">
-                        <Outlet />
+                        <Outlet context={{ isSidebarOpen }} />
                     </div>
                 </main>
             </div>

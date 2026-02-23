@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, CheckCircle, X, Link as LinkIcon } from 'lucide-react';
 import { recipes, categories } from '../data/mockData';
 import type { Recipe, Ingredient } from '../data/mockData';
@@ -64,13 +64,24 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                     >
                         {depth === 0 ? <ArrowLeft size={24} /> : <X size={24} />}
                     </button>
-                    <h1 className="text-xl font-bold tracking-tight text-content-primary">{recipe.name}</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-content-primary flex items-center gap-2">
+                        {recipe.serialNumber && (
+                            <span className="text-sm font-medium text-content-muted/60">
+                                {recipe.serialNumber}
+                            </span>
+                        )}
+                        {recipe.name}
+                    </h1>
                     <span className="px-3 py-1 bg-brand-light text-brand-blue rounded-md text-[10px] uppercase font-bold tracking-wider border border-brand-blue/20 flex items-center gap-1">
                         <CheckCircle size={12} /> {depth === 0 ? 'FINISHED' : 'PREP'}
                     </span>
                 </div>
 
                 <div className="flex gap-4 text-sm font-medium text-content-secondary">
+                    <div className="flex items-center gap-2 bg-surface-background px-3 py-1.5 rounded-lg border border-surface-border">
+                        <span className="text-[10px] font-bold text-content-muted uppercase tracking-wider">Yield</span>
+                        <span className="text-content-primary">1 Portion</span>
+                    </div>
                     <div className="flex items-center gap-1.5 bg-surface-background px-3 py-1.5 rounded-lg border border-surface-border">
                         <Clock size={16} className="text-brand-blue" />
                         {recipe.prepTime}
@@ -89,7 +100,7 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                 <div className="col-span-3 bg-surface-background flex flex-col overflow-hidden">
                     <div className="p-4 border-b border-surface-border bg-surface-card/50">
                         <h2 className="flex items-center gap-2 font-bold text-content-secondary uppercase tracking-wider text-xs">
-                            <Users size={14} className="text-content-muted" /> Ingredients
+                            <Users size={14} className="text-content-muted" /> Ingredients ({recipe.ingredients.length})
                         </h2>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
@@ -97,12 +108,18 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                             <thead className="text-[10px] text-content-muted uppercase bg-surface-border/30 rounded-lg">
                                 <tr>
                                     <th className="px-3 py-2 rounded-l-md font-semibold font-sans">Item</th>
-                                    <th className="px-3 py-2 text-right rounded-r-md font-semibold font-sans">Qty</th>
+                                    <th className="px-3 py-2 w-16 text-right font-semibold font-sans">Qty</th>
+                                    <th className="px-3 py-2 w-16 text-right rounded-r-md font-semibold font-sans">UoM</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-surface-border/50">
                                 {recipe.ingredients.map((ing, idx) => {
                                     const isClickable = !!ing.linkedRecipeId;
+                                    // Split netQty (e.g. "150g" -> "150", "g")
+                                    const qtyMatch = ing.netQty.match(/^([\d.]+)\s*([a-zA-Z]+)?$/);
+                                    const qty = qtyMatch ? qtyMatch[1] : ing.netQty;
+                                    const uom = qtyMatch ? (qtyMatch[2] || '') : '';
+
                                     return (
                                         <tr
                                             key={idx}
@@ -114,10 +131,12 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                                                     {ing.name}
                                                     {isClickable && <LinkIcon size={12} className="opacity-50" />}
                                                 </div>
-                                                <div className="text-[10px] text-content-muted mt-0.5">{ing.code}</div>
+                                            </td>
+                                            <td className="px-3 py-3 text-right font-mono text-xs font-medium text-content-primary">
+                                                {qty}
                                             </td>
                                             <td className="px-3 py-3 text-right font-mono text-xs font-medium text-content-secondary">
-                                                {ing.netQty}
+                                                {uom}
                                             </td>
                                         </tr>
                                     );
@@ -125,10 +144,7 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                             </tbody>
                         </table>
 
-                        <div className="mt-6 p-4 bg-brand-light/50 rounded-lg border border-brand-blue/10">
-                            <span className="text-[10px] font-bold text-brand-blue uppercase mb-1 block">Yield</span>
-                            <div className="text-base font-bold text-content-primary">1 Portion</div>
-                        </div>
+                        {/* Removed Yield Block */}
                     </div>
                 </div>
 
@@ -331,6 +347,7 @@ const DraggableStickyNote: React.FC<DraggableStickyNoteProps> = ({ recipe, index
 const RecipeDetail: React.FC = () => {
     const navigate = useNavigate();
     const { recipeId } = useParams<{ recipeId: string }>();
+    const { isSidebarOpen } = useOutletContext<{ isSidebarOpen: boolean }>();
 
     // Manage stack of recipe IDs for overlapping views
     const [recipeStack, setRecipeStack] = useState<string[]>([]);
@@ -370,40 +387,43 @@ const RecipeDetail: React.FC = () => {
     return (
         <div className="h-full flex flex-col animate-fade-in-up">
             {/* Edge-to-Edge Category Strip */}
-            <div className="absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 px-10">
-                <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar w-full">
-                    {categories.map((cat) => (
+            <div className={`absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 transition-all duration-300 ${isSidebarOpen ? 'px-10' : 'px-4'}`}>
+                <div className="flex items-center justify-between w-full h-[52px]">
+                    <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar max-w-[70%]">
+                        {categories.map((cat) => (
+                            <button
+                                key={cat.id}
+                                onClick={() => navigate(`/items/${cat.id}`)}
+                                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap border ${cat.id === categoryId
+                                    ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                                    : 'bg-surface-background text-content-secondary border-surface-border hover:border-brand-blue/40'
+                                    }`}
+                            >
+                                {cat.name}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Display Mode Toggle */}
+                    <div className="flex bg-surface-background border border-surface-border rounded-lg p-0.5 shadow-sm shrink-0">
                         <button
-                            key={cat.id}
-                            onClick={() => navigate(`/items/${cat.id}`)}
-                            className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap border ${cat.id === categoryId
-                                ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
-                                : 'bg-surface-background text-content-secondary border-surface-border hover:border-brand-blue/40'
-                                }`}
+                            onClick={() => setDisplayMode('stack')}
+                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'stack' ? 'bg-white text-brand-blue shadow-sm border border-surface-border/50' : 'text-content-secondary hover:text-brand-blue'}`}
                         >
-                            {cat.name}
+                            Overlay View
                         </button>
-                    ))}
+                        <button
+                            onClick={() => setDisplayMode('sticky')}
+                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'sticky' ? 'bg-amber-100 text-amber-900 shadow-sm border border-amber-200/50' : 'text-content-secondary hover:text-amber-600'}`}
+                        >
+                            Sticky Notes
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Main Recipe Detail Container */}
-            <div className="flex-1 relative overflow-hidden rounded-xl border border-surface-border shadow-sm flex bg-surface-background mt-12">
-                <div className="absolute top-4 right-1/4 z-40 bg-white/80 backdrop-blur-md border border-brand-blue/20 rounded-full p-1 flex items-center shadow-lg">
-                    <button
-                        onClick={() => setDisplayMode('stack')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${displayMode === 'stack' ? 'bg-brand-blue text-white shadow-sm' : 'text-content-secondary hover:text-brand-blue'}`}
-                    >
-                        Overlay Mode
-                    </button>
-                    <button
-                        onClick={() => setDisplayMode('sticky')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${displayMode === 'sticky' ? 'bg-amber-400 text-amber-950 shadow-sm' : 'text-content-secondary hover:text-amber-600'}`}
-                    >
-                        Sticky Note Mode
-                    </button>
-                </div>
-
+            <div className={`flex-1 relative overflow-hidden flex bg-surface-background transition-all duration-300 ${isSidebarOpen ? 'mt-14 rounded-xl border border-surface-border shadow-sm' : 'mt-[52px]'}`}>
                 {recipeStack.map((id, index) => {
                     const recipe = recipes.find(r => r.id === id);
                     if (!recipe) return null;

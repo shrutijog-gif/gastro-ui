@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, Search, Clock, Flame } from 'lucide-react';
 import { categories, recipes } from '../data/mockData';
 
@@ -7,6 +7,7 @@ const ItemList: React.FC = () => {
     const navigate = useNavigate();
     const { categoryId } = useParams<{ categoryId: string }>();
     const [searchTerm, setSearchTerm] = useState('');
+    const { isSidebarOpen } = useOutletContext<{ isSidebarOpen: boolean }>();
 
     const activeCategory = categories.find(c => c.id === categoryId);
     const categoryRecipes = recipes.filter(r =>
@@ -17,7 +18,7 @@ const ItemList: React.FC = () => {
     return (
         <div className="h-full flex flex-col animate-fade-in-up">
             {/* Edge-to-Edge Category Strip */}
-            <div className="absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 px-10">
+            <div className={`absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 transition-all duration-300 ${isSidebarOpen ? 'px-10' : 'px-6'}`}>
                 <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar w-full">
                     {categories.map((cat) => (
                         <button
@@ -35,7 +36,7 @@ const ItemList: React.FC = () => {
             </div>
 
             {/* Header & Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 mt-12">
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${isSidebarOpen ? 'mt-16 mb-6' : 'mt-14 px-6 pt-6 mb-6'}`}>
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate('/categories')}
@@ -59,7 +60,7 @@ const ItemList: React.FC = () => {
             </div>
 
             {/* Items Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-300 ${isSidebarOpen ? '' : 'px-6 pb-6'}`}>
                 {categoryRecipes.length > 0 ? (
                     categoryRecipes.map((recipe) => (
                         <button
@@ -72,9 +73,6 @@ const ItemList: React.FC = () => {
                                     className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
                                     style={{ backgroundImage: `url(${recipe.image})` }}
                                 />
-                                <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] uppercase font-bold text-content-primary shadow-sm border border-surface-border/50">
-                                    {recipe.id}
-                                </div>
                             </div>
 
                             <div className="p-4 flex-1 flex flex-col w-full">
@@ -86,6 +84,9 @@ const ItemList: React.FC = () => {
                                 </p>
 
                                 <div className="mt-auto flex items-center gap-4 text-xs text-content-muted font-medium">
+                                    <div className="flex items-center gap-1.5 px-1 py-1">
+                                        <span className="font-semibold text-content-muted/60">{recipe.serialNumber || recipe.id}</span>
+                                    </div>
                                     <div className="flex items-center gap-1.5 bg-surface-background px-2 py-1 rounded border border-surface-border">
                                         <Clock size={12} className="text-brand-blue" />
                                         {recipe.prepTime}
