@@ -76,8 +76,8 @@ export const recipes: Recipe[] = [
         categoryId: 'burger', // Technically a prep, but categorizing here for mock simplicity
         image: 'https://images.unsplash.com/photo-1472476449509-f06b6b553ced?auto=format&fit=crop&q=80&w=800',
         ingredients: [
-            { name: 'Mayonnaise', netQty: '500g', code: 'SAU-001', yield: '100%' },
-            { name: 'Ketchup', netQty: '150g', code: 'SAU-012', yield: '100%' },
+            { name: 'Mayonnaise', netQty: '500g', code: 'SAU-001', yield: '100%', linkedRecipeId: 'mayo-base' },
+            { name: 'Ketchup', netQty: '150g', code: 'SAU-012', yield: '100%', linkedRecipeId: 'ketchup-base' },
             { name: 'Sweet Relish', netQty: '50g', code: 'VEG-020', yield: '100%' },
             { name: 'White Vinegar', netQty: '15ml', code: 'LIQ-005', yield: '100%' },
             { name: 'Garlic Powder', netQty: '5g', code: 'SP-002', yield: '100%' },
@@ -284,4 +284,69 @@ export const recipes: Recipe[] = [
         prepTime: '6 mins',
         calories: '600 kcal',
     },
+    // --- SUB-SUB BASE INGREDIENTS ---
+    {
+        id: 'mayo-base',
+        serialNumber: 'SR-101',
+        name: 'House Mayonnaise Base',
+        categoryId: 'burger',
+        image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Egg Yolk', netQty: '2 pcs', code: 'EGG-01', yield: '100%' },
+            { name: 'Vegetable Oil', netQty: '200ml', code: 'OIL-02', yield: '100%' },
+            { name: 'House Mustard', netQty: '10g', code: 'MUS-01', yield: '100%', linkedRecipeId: 'house-mustard' },
+            { name: 'Lemon Juice', netQty: '15ml', code: 'LM-01', yield: '100%' },
+        ],
+        instructions: [
+            { step: 1, text: 'Whisk egg yolks and house mustard together until smooth.' },
+            { step: 2, text: 'Very slowly drizzle in oil while whisking vigorously to emulsify.' },
+            { step: 3, text: 'Stir in lemon juice and season with salt to taste.' }
+        ],
+        allergens: ['Egg', 'Mustard'],
+        prepTime: '15 mins',
+        calories: '600 kcal',
+    },
+    {
+        id: 'ketchup-base',
+        serialNumber: 'SR-102',
+        name: 'House Tomato Ketchup',
+        categoryId: 'burger',
+        image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Tomato Paste', netQty: '200g', code: 'TP-01', yield: '100%' },
+            { name: 'White Vinegar', netQty: '50ml', code: 'VIN-01', yield: '100%' },
+            { name: 'Brown Sugar', netQty: '20g', code: 'SUG-01', yield: '100%' },
+            { name: 'Onion Powder', netQty: '5g', code: 'SP-03', yield: '100%' },
+        ],
+        instructions: [
+            { step: 1, text: 'Combine all ingredients in a saucepan.' },
+            { step: 2, text: 'Simmer over low heat for 15 minutes.' },
+            { step: 3, text: 'Allow to cool completely and store.' }
+        ],
+        allergens: [],
+        prepTime: '20 mins',
+        calories: '120 kcal',
+    },
+    // --- DEEP SUB-SUB-SUB BASE INGREDIENTS FOR 3RD COLUMN TESTING ---
+    {
+        id: 'house-mustard',
+        serialNumber: 'SR-103',
+        name: 'House Dijon Mustard',
+        categoryId: 'burger',
+        image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Mustard Seeds', netQty: '50g', code: 'MS-01', yield: '100%' },
+            { name: 'White Wine Vinegar', netQty: '30ml', code: 'VIN-02', yield: '100%' },
+            { name: 'Water', netQty: '20ml', code: 'H20-01', yield: '100%' },
+            { name: 'Salt', netQty: '2g', code: 'SA-01', yield: '100%' },
+        ],
+        instructions: [
+            { step: 1, text: 'Soak mustard seeds in vinegar and water overnight.' },
+            { step: 2, text: 'Blend until smooth or desired consistency.' },
+            { step: 3, text: 'Season with salt and let rest for 24 hours before use.' }
+        ],
+        allergens: ['Mustard'],
+        prepTime: '24 hrs',
+        calories: '45 kcal',
+    }
 ];
