@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
-import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, X, Link as LinkIcon, ChevronDown, ChevronRight, Layers } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, X, Link as LinkIcon, ChevronDown, ChevronRight, Layers, List, Utensils } from 'lucide-react';
 import { recipes, categories } from '../data/mockData';
 import type { Recipe, Ingredient } from '../data/mockData';
 
@@ -348,7 +348,183 @@ const DraggableStickyNote: React.FC<DraggableStickyNoteProps> = ({ recipe, index
     );
 };
 
-// --- Hierarchy View Component (Option 3) ---
+// --- Vertical Info View Component ---
+interface RecipeVerticalInfoViewProps {
+    baseRecipe: Recipe;
+    initialSubRecipeId: string;
+    onClose: () => void;
+    onIngredientClick: (id: string) => void;
+}
+
+const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRecipe, initialSubRecipeId, onClose, onIngredientClick }) => {
+    const subRecipe = recipes.find(r => r.id === initialSubRecipeId);
+
+    // Manage accordion states for both columns. Defaulting "Ingredients" and "Instructions" to open.
+    const [baseExpanded, setBaseExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
+    const [subExpanded, setSubExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
+
+    const toggleAccordion = (setter: React.Dispatch<React.SetStateAction<Record<string, boolean>>>, key: string) => {
+        setter(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const renderColumnContent = (recipe: Recipe, expandedState: Record<string, boolean>, setExpandedState: React.Dispatch<React.SetStateAction<Record<string, boolean>>>, isSubRecipe: boolean) => (
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+            {/* Header / Photo Card */}
+            <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-sm flex items-stretch h-32">
+                <img src={recipe.image} alt={recipe.name} className="w-32 h-full object-cover" />
+                <div className="p-4 flex flex-col justify-center flex-1">
+                    <h3 className="font-bold text-lg text-content-primary leading-tight">{recipe.name}</h3>
+                    {isSubRecipe && <span className="text-[10px] w-fit mt-1 px-1.5 py-0.5 rounded bg-brand-blue/10 text-brand-blue uppercase font-bold tracking-wider">Sub-Recipe</span>}
+                </div>
+            </div>
+
+            {/* Ingredients Accordion */}
+            <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-sm">
+                <button
+                    className="w-full p-4 flex items-center justify-between hover:bg-surface-background transition-colors"
+                    onClick={() => toggleAccordion(setExpandedState, 'ingredients')}
+                >
+                    <h3 className="font-bold text-sm text-content-secondary uppercase tracking-wider flex items-center gap-2">
+                        <List size={16} /> Ingredients
+                    </h3>
+                    {expandedState.ingredients ? <ChevronDown size={18} className="text-content-muted" /> : <ChevronRight size={18} className="text-content-muted" />}
+                </button>
+                {expandedState.ingredients && (
+                    <div className="px-4 pb-4">
+                        <div className="space-y-1 mt-2">
+                            {recipe.ingredients.map((ing, idx) => (
+                                <div key={idx} className="flex py-1.5 border-b border-surface-border/50 last:border-0 justify-between items-center text-sm">
+                                    <span
+                                        onClick={() => {
+                                            if (!isSubRecipe && ing.linkedRecipeId) {
+                                                onIngredientClick(ing.linkedRecipeId);
+                                            }
+                                        }}
+                                        className={`text-content-primary ${ing.linkedRecipeId ? 'text-brand-blue hover:text-brand-blue-hover cursor-pointer underline decoration-brand-blue/30 underline-offset-4' : ''}`}
+                                    >
+                                        {ing.name}
+                                    </span>
+                                    <div className="flex text-content-muted gap-2 text-xs">
+                                        <span className="w-12 text-right">{ing.netQty}</span>
+                                        <span className="w-8">{ing.yield}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Instructions Accordion */}
+            <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-sm">
+                <button
+                    className="w-full p-4 flex items-center justify-between hover:bg-surface-background transition-colors"
+                    onClick={() => toggleAccordion(setExpandedState, 'instructions')}
+                >
+                    <h3 className="font-bold text-sm text-content-secondary uppercase tracking-wider flex items-center gap-2">
+                        <Layers size={16} /> Preparation Method
+                    </h3>
+                    {expandedState.instructions ? <ChevronDown size={18} className="text-content-muted" /> : <ChevronRight size={18} className="text-content-muted" />}
+                </button>
+                {expandedState.instructions && (
+                    <div className="px-4 pb-4 space-y-3 mt-2">
+                        {recipe.instructions.map((inst) => (
+                            <div key={inst.step} className="flex gap-4">
+                                <div className="flex-shrink-0 w-6 h-6 rounded-md bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-bold flex items-center justify-center shadow-sm">
+                                    {inst.step}
+                                </div>
+                                <div className="pt-0.5 text-sm leading-relaxed text-content-primary">
+                                    {renderInstructionText(inst.text, recipe.ingredients, (id) => {
+                                        if (!isSubRecipe) {
+                                            onIngredientClick(id);
+                                        }
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Additional Info Accordion */}
+            <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-sm">
+                <button
+                    className="w-full p-4 flex items-center justify-between hover:bg-surface-background transition-colors"
+                    onClick={() => toggleAccordion(setExpandedState, 'details')}
+                >
+                    <h3 className="font-bold text-sm text-content-secondary uppercase tracking-wider flex items-center gap-2">
+                        <Utensils size={16} /> Details
+                    </h3>
+                    {expandedState.details ? <ChevronDown size={18} className="text-content-muted" /> : <ChevronRight size={18} className="text-content-muted" />}
+                </button>
+                {expandedState.details && (
+                    <div className="p-4 pt-0 grid border-t border-surface-border/50 mt-2 pt-4">
+                        <div className="flex justify-between py-2 border-b border-surface-border/50 text-sm">
+                            <span className="text-content-muted">Prep Time</span>
+                            <span className="font-medium text-content-primary">{recipe.prepTime}</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b border-surface-border/50 text-sm">
+                            <span className="text-content-muted">Calories</span>
+                            <span className="font-medium text-content-primary">{recipe.calories}</span>
+                        </div>
+                        <div className="flex justify-between py-2 text-sm items-center">
+                            <span className="text-content-muted">Allergens</span>
+                            <div className="flex gap-1 flex-wrap justify-end">
+                                {recipe.allergens.map((allergen, idx) => (
+                                    <span key={idx} className="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded textxs font-semibold">
+                                        {allergen}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="h-full flex flex-col overflow-hidden bg-surface-background rounded-b-xl animate-fade-in-up">
+            {/* Header */}
+            <header className="flex items-center justify-between px-6 py-4 border-b border-surface-border bg-surface-card shrink-0">
+                <div className="flex items-center gap-4">
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-background transition-colors text-content-muted hover:text-content-primary">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <h1 className="text-lg font-bold text-content-primary flex items-center gap-2">
+                        {baseRecipe.name}
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase tracking-wider ml-2 flex items-center gap-1">
+                            <Layers size={10} /> Vertical Info
+                        </span>
+                    </h1>
+                </div>
+            </header>
+
+            {/* 2 Column Layout */}
+            <div className="flex-1 flex divide-x divide-surface-border overflow-hidden">
+                {/* Column 1: Main Recipe */}
+                <div className="flex-1 flex flex-col bg-surface-background h-full">
+                    <div className="p-3 border-b border-surface-border bg-brand-light/20 px-6 shrink-0">
+                        <h2 className="font-bold text-brand-blue uppercase tracking-wider text-xs">Main Recipe</h2>
+                    </div>
+                    {renderColumnContent(baseRecipe, baseExpanded, setBaseExpanded, false)}
+                </div>
+
+                {/* Column 2: Sub-Recipe */}
+                <div className="flex-1 flex flex-col bg-surface-background/50 h-full">
+                    <div className="p-3 border-b border-surface-border bg-emerald-50 px-6 shrink-0">
+                        <h2 className="font-bold text-emerald-700 uppercase tracking-wider text-xs">Sub-Recipe</h2>
+                    </div>
+                    {subRecipe ? (
+                        renderColumnContent(subRecipe, subExpanded, setSubExpanded, true)
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-content-muted text-sm">Recipe not found</div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 interface RecipeHierarchyViewProps {
     baseRecipe: Recipe;
     initialSelectedSubId?: string | null;
@@ -546,10 +722,11 @@ const RecipeDetail: React.FC = () => {
     const [recipeStack, setRecipeStack] = useState<string[]>([]);
 
     // Manage display mode ('stack' for overlapping columns, 'sticky' for floating notes)
-    const [displayMode, setDisplayMode] = useState<'stack' | 'sticky' | 'hierarchy'>('stack');
+    const [displayMode, setDisplayMode] = useState<'stack' | 'sticky' | 'hierarchy' | 'vertical-info'>('stack');
 
     // Manage active overlay base recipe for Hierarchy view
     const [hierarchyTriggerId, setHierarchyTriggerId] = useState<string | null>(null);
+    const [verticalInfoTriggerId, setVerticalInfoTriggerId] = useState<string | null>(null);
 
     useEffect(() => {
         if (recipeId) {
@@ -570,6 +747,10 @@ const RecipeDetail: React.FC = () => {
     const handleIngredientClick = (linkedId: string) => {
         if (displayMode === 'hierarchy') {
             setHierarchyTriggerId(linkedId);
+            return;
+        }
+        if (displayMode === 'vertical-info') {
+            setVerticalInfoTriggerId(linkedId);
             return;
         }
 
@@ -624,6 +805,12 @@ const RecipeDetail: React.FC = () => {
                             className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'hierarchy' ? 'bg-indigo-100 text-indigo-900 shadow-sm border border-indigo-200/50' : 'text-content-secondary hover:text-indigo-600'}`}
                         >
                             Hierarchy
+                        </button>
+                        <button
+                            onClick={() => setDisplayMode('vertical-info')}
+                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'vertical-info' ? 'bg-emerald-100 text-emerald-900 shadow-sm border border-emerald-200/50' : 'text-content-secondary hover:text-emerald-600'}`}
+                        >
+                            Vertical Info
                         </button>
                     </div>
                 </div>
@@ -695,6 +882,24 @@ const RecipeDetail: React.FC = () => {
                             baseRecipe={recipes.find(r => r.id === (recipeId || recipeStack[0]))!}
                             initialSelectedSubId={hierarchyTriggerId}
                             onClose={() => setHierarchyTriggerId(null)}
+                        />
+                    </div>
+                )}
+
+                {/* DYNAMIC VERTICAL INFO OVERLAY */}
+                {displayMode === 'vertical-info' && (
+                    <div
+                        className="absolute inset-y-0 right-0 z-[110] bg-surface-background shadow-[-10px_0_30px_-5px_rgba(0,0,0,0.3)] border-l border-surface-border transition-transform duration-300 ease-in-out"
+                        style={{ width: '100%' }}
+                    >
+                        <RecipeVerticalInfoView
+                            baseRecipe={recipes.find(r => r.id === (recipeId || recipeStack[0]))!}
+                            initialSubRecipeId={verticalInfoTriggerId || recipes.find(r => r.id === (recipeId || recipeStack[0]))!.ingredients.find(ing => ing.linkedRecipeId)?.linkedRecipeId || ''}
+                            onClose={() => {
+                                setDisplayMode('stack');
+                                setVerticalInfoTriggerId(null);
+                            }}
+                            onIngredientClick={(id) => setVerticalInfoTriggerId(id)}
                         />
                     </div>
                 )}

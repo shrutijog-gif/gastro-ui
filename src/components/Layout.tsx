@@ -1,20 +1,24 @@
 import React, { useMemo, useState } from 'react';
-import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, Link, NavLink } from 'react-router-dom';
 import { LayoutGrid, CheckSquare, Bell, ChevronRight, FileText, Home as HomeIcon, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 import { categories, recipes } from '../data/mockData';
 
 const Layout: React.FC = () => {
-    const navigate = useNavigate();
     const location = useLocation();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [customBreadcrumbs, setCustomBreadcrumbs] = useState<React.ReactNode | null>(null);
 
     // Generate breadcrumbs based on current route
     const breadcrumbs = useMemo(() => {
         const paths = location.pathname.split('/').filter(Boolean);
-        const crumbs = [{ label: 'Recipe Book', path: '/' }]; // Base
+        let crumbs = [{ label: 'App', path: '/' }]; // Base
 
-        if (paths[0] === 'categories') {
+        if (paths[0] === 'dashboard') {
+            crumbs = [{ label: 'Dashboard', path: '/dashboard' }];
+        } else if (paths[0] === 'home') {
+            crumbs = [{ label: 'Recipe Book', path: '/home' }];
+        } else if (paths[0] === 'categories') {
             crumbs.push({ label: 'Categories', path: '/categories' });
         } else if (paths[0] === 'items' && paths[1]) {
             const category = categories.find(c => c.id === paths[1]);
@@ -46,7 +50,7 @@ const Layout: React.FC = () => {
                     </button>
                     <FileText size={18} className="text-content-secondary shrink-0" />
                     <div className="flex items-center text-sm font-semibold text-content-primary whitespace-nowrap overflow-x-auto custom-scrollbar pb-1 -mb-1">
-                        {breadcrumbs.map((crumb, index) => (
+                        {customBreadcrumbs ? customBreadcrumbs : breadcrumbs.map((crumb, index) => (
                             <React.Fragment key={crumb.path}>
                                 {index > 0 && <ChevronRight size={16} className="mx-2 text-content-muted shrink-0" />}
                                 <Link
@@ -96,25 +100,31 @@ const Layout: React.FC = () => {
                 {/* Side Navigation */}
                 {isSidebarOpen && (
                     <aside className="w-[72px] bg-surface-card border-r border-surface-border flex flex-col items-center py-6 shrink-0 z-10 transition-all duration-300">
-                        <button
-                            onClick={() => navigate('/')}
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${location.pathname === '/' ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
+                        <NavLink
+                            to="/dashboard"
+                            className={({ isActive }) => `w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${isActive ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
+                        >
+                            <LayoutGrid size={24} />
+                        </NavLink>
+                        <NavLink
+                            to="/home"
+                            className={({ isActive }) => `w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${isActive ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
                         >
                             <HomeIcon size={24} />
-                        </button>
-                        <button
-                            onClick={() => navigate('/categories')}
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${location.pathname === '/categories' ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
+                        </NavLink>
+                        <NavLink
+                            to="/categories"
+                            className={({ isActive }) => `w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${isActive ? 'bg-brand-light text-brand-blue' : 'text-content-muted hover:bg-surface-background'}`}
                         >
                             <BookOpen size={24} />
-                        </button>
+                        </NavLink>
                     </aside>
                 )}
 
                 {/* Main Content */}
-                <main className={`flex-1 overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? 'p-10' : 'p-0'}`}>
+                <main className={`flex-1 overflow-y-auto relative transition-all duration-300 p-[40px]`}>
                     <div className="w-full h-full space-y-6">
-                        <Outlet context={{ isSidebarOpen }} />
+                        <Outlet context={{ isSidebarOpen, setCustomBreadcrumbs }} />
                     </div>
                 </main>
             </div>
