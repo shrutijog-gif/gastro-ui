@@ -5,7 +5,6 @@ import {
     Filter,
     Grid2x2,
     List,
-    Folder,
     FileText,
     ChevronRight
 } from 'lucide-react';
@@ -15,6 +14,20 @@ import {
     documentTypes,
     documents
 } from '../data/documentRegistryData';
+
+const RealisticFolderIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
+    <svg viewBox="0 0 120 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 20C14 15.5817 17.5817 12 22 12H44C46.5 12 48.5 13.5 50 16L56 26H104C108.418 26 112 29.5817 112 34V82C112 86.4183 108.418 90 104 90H22C17.5817 90 14 86.4183 14 82V20Z" fill="#F0A710" />
+        <defs>
+            <linearGradient id="frontGradient" x1="60" y1="30" x2="60" y2="90" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#F8D56A" />
+                <stop offset="100%" stopColor="#F2BC2A" />
+            </linearGradient>
+        </defs>
+        <path d="M12 38C12 33.5817 15.5817 30 20 30H106C110.418 30 114 33.5817 114 38V82C114 86.4183 110.418 90 106 90H20C15.5817 90 12 86.4183 12 82V38Z" fill="url(#frontGradient)" />
+        <path d="M12 38C12 33.5817 15.5817 30 20 30H106C110.418 30 114 33.5817 114 38V40C114 35.5817 110.418 32 106 32H20C15.5817 32 12 35.5817 12 40V38Z" fill="#FFF2AD" />
+    </svg>
+);
 
 const DocumentRegistry: React.FC = () => {
     const { setCustomBreadcrumbs } = useOutletContext<{ setCustomBreadcrumbs: React.Dispatch<React.SetStateAction<React.ReactNode>> }>();
@@ -100,48 +113,63 @@ const DocumentRegistry: React.FC = () => {
     }, [selectedDepartmentId, selectedBrandId, selectedDocumentTypeId, selectedDepartment, selectedBrand, selectedDocumentType, setCustomBreadcrumbs]);
 
     // Render folder cards
-    const renderFolder = (title: string, subtitle: string, onClick: () => void) => (
-        <div
-            className="group bg-surface-card rounded-2xl p-5 border border-surface-border shadow-sm hover:shadow-md hover:border-brand-blue/30 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-1 relative overflow-hidden"
-            onClick={onClick}
-        >
-            <div className="w-16 h-16 rounded-2xl bg-brand-light flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-colors duration-300">
-                <Folder size={32} strokeWidth={1.5} />
+    const renderFolder = (title: string, count: number, onClick: () => void) => {
+        return (
+            <div
+                className="group cursor-pointer flex flex-col items-center justify-start gap-1 transition-transform duration-300 hover:-translate-y-1 relative"
+                onClick={onClick}
+            >
+                <div className="relative">
+                    <RealisticFolderIcon className="w-24 h-24 drop-shadow-sm group-hover:drop-shadow-md" />
+                    <div className="absolute inset-0 flex items-center justify-center pt-5 pointer-events-none">
+                        <span className="text-xs font-bold text-amber-800 group-hover:text-amber-900 transition-colors">
+                            {count === 0 ? '-' : count}
+                        </span>
+                    </div>
+                </div>
+                <div className="flex flex-col items-center px-1 -mt-2">
+                    <h3 className="text-sm font-medium text-slate-700 group-hover:text-brand-blue transition-colors truncate max-w-[100px] text-center" title={title}>
+                        {title}
+                    </h3>
+                </div>
             </div>
-            <div className="text-center">
-                <h3 className="font-bold text-content-primary group-hover:text-brand-blue transition-colors">{title}</h3>
-                <p className="text-xs text-content-muted mt-1">{subtitle}</p>
-            </div>
-        </div>
-    );
+        );
+    };
 
-    const renderFolderList = (items: any[], typeName: string, onClick: (id: string) => void) => (
+    const renderFolderList = (items: any[], typeName: string, onClick: (id: string) => void, getCount: (id: string) => number) => (
         <div className="bg-surface-card rounded-2xl border border-surface-border overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-surface-border bg-slate-50/50">
-                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider w-16 text-center"></th>
-                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Name</th>
+                            <th className="py-4 pl-6 pr-2 text-xs font-semibold text-content-secondary uppercase tracking-wider w-12 text-center"></th>
+                            <th className="py-4 pl-0 pr-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Name</th>
                             <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Type</th>
+                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider text-right">Items</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-border">
-                        {items.map((item) => (
-                            <tr key={item.id} onClick={() => onClick(item.id)} className="hover:bg-slate-50 transition-colors group cursor-pointer">
-                                <td className="py-4 px-6 text-brand-blue">
-                                    <div className="flex justify-center">
-                                        <Folder size={20} />
-                                    </div>
-                                </td>
-                                <td className="py-4 px-6">
-                                    <div className="font-bold text-sm text-content-primary group-hover:text-brand-blue transition-colors">{item.name}</div>
-                                </td>
-                                <td className="py-4 px-6 text-sm text-content-secondary">
-                                    {typeName}
-                                </td>
-                            </tr>
-                        ))}
+                        {items.map((item) => {
+                            const count = getCount(item.id);
+                            return (
+                                <tr key={item.id} onClick={() => onClick(item.id)} className="hover:bg-slate-50 transition-colors group cursor-pointer">
+                                    <td className="py-3 pl-6 pr-2">
+                                        <div className="flex justify-center">
+                                            <RealisticFolderIcon className="w-8 h-8 drop-shadow-sm" />
+                                        </div>
+                                    </td>
+                                    <td className="py-4 pl-0 pr-6">
+                                        <div className="font-bold text-sm text-content-primary group-hover:text-brand-blue transition-colors">{item.name}</div>
+                                    </td>
+                                    <td className="py-4 px-6 text-sm text-content-secondary">
+                                        {typeName}
+                                    </td>
+                                    <td className="py-4 px-6 text-sm text-content-secondary text-right">
+                                        {count} document(s)
+                                    </td>
+                                </tr>
+                            );
+                        })}
                         {items.length === 0 && (
                             <tr>
                                 <td colSpan={3} className="py-12 text-center text-content-muted">
@@ -214,29 +242,35 @@ const DocumentRegistry: React.FC = () => {
             );
         } else if (selectedBrandId) {
             // Render Document Types Folder view
-            return viewMode === 'list' ? renderFolderList(visibleDocumentTypes, "Document Type", setSelectedDocumentTypeId) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {visibleDocumentTypes.map(dt => renderFolder(dt.name, "Document Type", () => setSelectedDocumentTypeId(dt.id)))}
+            return viewMode === 'list' ? renderFolderList(visibleDocumentTypes, "Document Type", setSelectedDocumentTypeId, (id) => documents.filter(d => d.documentTypeId === id).length) : (
+                <div className="flex flex-wrap gap-8 p-4">
+                    {visibleDocumentTypes.map(dt => renderFolder(dt.name, documents.filter(d => d.documentTypeId === dt.id).length, () => setSelectedDocumentTypeId(dt.id)))}
                     {visibleDocumentTypes.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-content-muted">No document types found.</div>
+                        <div className="w-full py-12 text-center text-content-muted">No document types found.</div>
                     )}
                 </div>
             );
         } else if (selectedDepartmentId) {
             // Render Brands Folder view
-            return viewMode === 'list' ? renderFolderList(visibleBrands, "Brand", setSelectedBrandId) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {visibleBrands.map(b => renderFolder(b.name, "Brand", () => setSelectedBrandId(b.id)))}
+            return viewMode === 'list' ? renderFolderList(visibleBrands, "Brand", setSelectedBrandId, (id) => documentTypes.filter(dt => dt.brandId === id).reduce((acc, dt) => acc + documents.filter(d => d.documentTypeId === dt.id).length, 0)) : (
+                <div className="flex flex-wrap gap-8 p-4">
+                    {visibleBrands.map(b => {
+                        const count = documentTypes.filter(dt => dt.brandId === b.id).reduce((acc, dt) => acc + documents.filter(d => d.documentTypeId === dt.id).length, 0);
+                        return renderFolder(b.name, count, () => setSelectedBrandId(b.id));
+                    })}
                     {visibleBrands.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-content-muted">No brands found.</div>
+                        <div className="w-full py-12 text-center text-content-muted">No brands found.</div>
                     )}
                 </div>
             );
         } else {
             // Render Departments Folder view
-            return viewMode === 'list' ? renderFolderList(visibleDepartments, "Department", setSelectedDepartmentId) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {visibleDepartments.map(d => renderFolder(d.name, "Department", () => setSelectedDepartmentId(d.id)))}
+            return viewMode === 'list' ? renderFolderList(visibleDepartments, "Department", setSelectedDepartmentId, (id) => brands.filter(b => b.departmentId === id).reduce((acc, b) => acc + documentTypes.filter(dt => dt.brandId === b.id).reduce((acc2, dt) => acc2 + documents.filter(d => d.documentTypeId === dt.id).length, 0), 0)) : (
+                <div className="flex flex-wrap gap-8 p-4">
+                    {visibleDepartments.map(d => {
+                        const count = brands.filter(b => b.departmentId === d.id).reduce((acc, b) => acc + documentTypes.filter(dt => dt.brandId === b.id).reduce((acc2, dt) => acc2 + documents.filter(doc => doc.documentTypeId === dt.id).length, 0), 0);
+                        return renderFolder(d.name, count, () => setSelectedDepartmentId(d.id));
+                    })}
                 </div>
             );
         }
