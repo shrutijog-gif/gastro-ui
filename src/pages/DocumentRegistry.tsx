@@ -6,7 +6,9 @@ import {
     Grid2x2,
     List,
     FileText,
-    ChevronRight
+    ChevronRight,
+    FolderTree,
+    Files
 } from 'lucide-react';
 import {
     departments,
@@ -40,6 +42,12 @@ const DocumentRegistry: React.FC = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+    // All Documents View State
+    const [isAllDocsView, setIsAllDocsView] = useState(false);
+    const [filterDepartment, setFilterDepartment] = useState<string>('all');
+    const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [filterDocType, setFilterDocType] = useState<string>('all');
+
     // Derived current navigation items
     const selectedDepartment = useMemo(() => departments.find(d => d.id === selectedDepartmentId), [selectedDepartmentId]);
     const selectedBrand = useMemo(() => brands.find(b => b.id === selectedBrandId), [selectedBrandId]);
@@ -51,7 +59,53 @@ const DocumentRegistry: React.FC = () => {
     const visibleDocumentTypes = useMemo(() => documentTypes.filter(dt => dt.brandId === selectedBrandId), [selectedBrandId]);
     const visibleDocuments = useMemo(() => documents.filter(doc => doc.documentTypeId === selectedDocumentTypeId), [selectedDocumentTypeId]);
 
+    // Unique filter options for All Documents
+    const uniqueDepartments = useMemo(() => Array.from(new Set(documents.map(d => d.department))), []);
+    const uniqueCategories = useMemo(() => {
+        let docsForCats = documents;
+        if (filterDepartment !== 'all') docsForCats = docsForCats.filter(d => d.department === filterDepartment);
+        return Array.from(new Set(docsForCats.map(d => d.category)));
+    }, [filterDepartment]);
+    const uniqueDocTypes = useMemo(() => {
+        let docsForTypes = documents;
+        if (filterDepartment !== 'all') docsForTypes = docsForTypes.filter(d => d.department === filterDepartment);
+        if (filterCategory !== 'all') docsForTypes = docsForTypes.filter(d => d.category === filterCategory);
+        return Array.from(new Set(docsForTypes.map(d => d.type)));
+    }, [filterDepartment, filterCategory]);
+
+    // Filtered All Documents
+    const filteredAllDocs = useMemo(() => {
+        return documents.filter(doc => {
+            const matchesSearch = searchQuery ?
+                doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                doc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                doc.id.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+
+            const matchesDept = filterDepartment === 'all' ? true : doc.department === filterDepartment;
+            const matchesCat = filterCategory === 'all' ? true : doc.category === filterCategory;
+            const matchesType = filterDocType === 'all' ? true : doc.type === filterDocType;
+
+            return matchesSearch && matchesDept && matchesCat && matchesType;
+        });
+    }, [searchQuery, filterDepartment, filterCategory, filterDocType]);
+
     useEffect(() => {
+        if (isAllDocsView) {
+            const crumbs = (
+                <>
+                    <div className="flex items-center text-content-secondary cursor-pointer hover:text-brand-blue" onClick={() => setIsAllDocsView(false)}>
+                        Document Registry
+                    </div>
+                    <ChevronRight size={16} className="mx-2 text-content-muted shrink-0" />
+                    <div className="text-brand-blue font-bold">
+                        All Documents
+                    </div>
+                </>
+            );
+            setCustomBreadcrumbs(crumbs);
+            return () => setCustomBreadcrumbs(null);
+        }
+
         const crumbs = (
             <>
                 <div className="flex items-center text-content-secondary cursor-pointer hover:text-brand-blue" onClick={() => {
@@ -110,7 +164,7 @@ const DocumentRegistry: React.FC = () => {
         );
         setCustomBreadcrumbs(crumbs);
         return () => setCustomBreadcrumbs(null);
-    }, [selectedDepartmentId, selectedBrandId, selectedDocumentTypeId, selectedDepartment, selectedBrand, selectedDocumentType, setCustomBreadcrumbs]);
+    }, [selectedDepartmentId, selectedBrandId, selectedDocumentTypeId, selectedDepartment, selectedBrand, selectedDocumentType, isAllDocsView, setCustomBreadcrumbs]);
 
     // Render folder cards
     const renderFolder = (title: string, count: number, onClick: () => void) => {
@@ -172,8 +226,98 @@ const DocumentRegistry: React.FC = () => {
                         })}
                         {items.length === 0 && (
                             <tr>
-                                <td colSpan={3} className="py-12 text-center text-content-muted">
+                                <td colSpan={4} className="py-12 text-center text-content-muted">
                                     No {typeName.toLowerCase()}s found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+
+    const renderDocumentGrid = (docs: typeof documents) => (
+        <div className="flex flex-wrap gap-6 p-4 pt-0">
+            {docs.map(doc => (
+                <div key={doc.id} className="bg-surface-card border border-surface-border rounded-2xl p-5 w-[280px] shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col gap-3">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-start justify-between">
+                            <div className="p-2 bg-brand-blue/10 rounded-xl text-brand-blue">
+                                <FileText size={20} />
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-content-secondary rounded-lg">{doc.version}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-sm text-content-primary group-hover:text-brand-blue transition-colors leading-tight line-clamp-2" title={doc.title}>{doc.title}</h3>
+                        <p className="text-xs text-content-muted mt-1.5 line-clamp-2">{doc.description}</p>
+                    </div>
+                    <div className="mt-auto pt-4 border-t border-surface-border flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-content-secondary font-medium">{doc.department}</span>
+                            <span className="text-xs text-content-muted">{doc.date}</span>
+                        </div>
+                        <div className="text-[10px] items-center flex justify-between tracking-wider font-semibold w-full">
+                            <span className="text-content-muted uppercase truncate mr-2" title={doc.category}>{doc.category}</span>
+                            <span className="text-brand-blue px-2 py-0.5 bg-brand-blue/10 rounded font-medium shrink-0 max-w-[50%] truncate ml-auto" title={doc.type}>{doc.type}</span>
+                        </div>
+                    </div>
+                </div>
+            ))}
+            {docs.length === 0 && (
+                <div className="w-full py-12 text-center text-content-muted">
+                    No documents found.
+                </div>
+            )}
+        </div>
+    );
+
+    const renderDocumentTable = (docs: typeof documents) => (
+        <div className="bg-surface-card rounded-2xl border border-surface-border overflow-hidden shadow-sm m-4 mt-0">
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-surface-border bg-slate-50/50">
+                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">ID & Version</th>
+                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Date</th>
+                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Title & Description</th>
+                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Category & Type</th>
+                            <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Department</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-border">
+                        {docs.map((doc) => (
+                            <tr key={doc.id} className="hover:bg-slate-50 transition-colors group cursor-pointer">
+                                <td className="py-4 px-6">
+                                    <div className="font-bold text-sm text-content-primary">{doc.id}</div>
+                                    <div className="text-xs text-content-muted mt-0.5">{doc.version}</div>
+                                </td>
+                                <td className="py-4 px-6 text-sm text-content-secondary">
+                                    {doc.date}
+                                </td>
+                                <td className="py-4 px-6">
+                                    <div className="flex items-start gap-2">
+                                        <FileText size={16} className="text-brand-blue mt-0.5 shrink-0" />
+                                        <div>
+                                            <div className="font-bold text-sm text-content-primary group-hover:text-brand-blue transition-colors">{doc.title}</div>
+                                            <div className="text-xs text-content-muted mt-0.5">{doc.description}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="py-4 px-6">
+                                    <div className="font-medium text-sm text-content-primary">{doc.category}</div>
+                                    <div className="text-xs text-content-muted mt-0.5">{doc.type}</div>
+                                </td>
+                                <td className="py-4 px-6 text-sm text-content-secondary">
+                                    {doc.department}
+                                </td>
+                            </tr>
+                        ))}
+                        {docs.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="py-12 text-center text-content-muted">
+                                    No documents found.
                                 </td>
                             </tr>
                         )}
@@ -185,61 +329,11 @@ const DocumentRegistry: React.FC = () => {
 
     // Render logic to determine what is currently visible
     const renderContent = () => {
-        if (selectedDocumentTypeId) {
+        if (isAllDocsView) {
+            return viewMode === 'list' ? renderDocumentTable(filteredAllDocs) : renderDocumentGrid(filteredAllDocs);
+        } else if (selectedDocumentTypeId) {
             // Render Document List (Table)
-            return (
-                <div className="bg-surface-card rounded-2xl border border-surface-border overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-surface-border bg-slate-50/50">
-                                    <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">ID & Version</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Date</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Title & Description</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Category & Type</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-content-secondary uppercase tracking-wider">Department</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-surface-border">
-                                {visibleDocuments.map((doc) => (
-                                    <tr key={doc.id} className="hover:bg-slate-50 transition-colors group cursor-pointer">
-                                        <td className="py-4 px-6">
-                                            <div className="font-bold text-sm text-content-primary">{doc.id}</div>
-                                            <div className="text-xs text-content-muted mt-0.5">{doc.version}</div>
-                                        </td>
-                                        <td className="py-4 px-6 text-sm text-content-secondary">
-                                            {doc.date}
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <div className="flex items-start gap-2">
-                                                <FileText size={16} className="text-brand-blue mt-0.5 shrink-0" />
-                                                <div>
-                                                    <div className="font-bold text-sm text-content-primary group-hover:text-brand-blue transition-colors">{doc.title}</div>
-                                                    <div className="text-xs text-content-muted mt-0.5">{doc.description}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <div className="font-medium text-sm text-content-primary">{doc.category}</div>
-                                            <div className="text-xs text-content-muted mt-0.5">{doc.type}</div>
-                                        </td>
-                                        <td className="py-4 px-6 text-sm text-content-secondary">
-                                            {doc.department}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {visibleDocuments.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="py-12 text-center text-content-muted">
-                                            No documents found in this document type.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            );
+            return viewMode === 'list' ? renderDocumentTable(visibleDocuments) : renderDocumentGrid(visibleDocuments);
         } else if (selectedBrandId) {
             // Render Document Types Folder view
             return viewMode === 'list' ? renderFolderList(visibleDocumentTypes, "Document Type", setSelectedDocumentTypeId, (id) => documents.filter(d => d.documentTypeId === id).length) : (
@@ -265,7 +359,7 @@ const DocumentRegistry: React.FC = () => {
             );
         } else {
             // Render Departments Folder view
-            return viewMode === 'list' ? renderFolderList(visibleDepartments, "Department", setSelectedDepartmentId, (id) => brands.filter(b => b.departmentId === id).reduce((acc, b) => acc + documentTypes.filter(dt => dt.brandId === b.id).reduce((acc2, dt) => acc2 + documents.filter(d => d.documentTypeId === dt.id).length, 0), 0)) : (
+            return viewMode === 'list' ? renderFolderList(visibleDepartments, "Department", setSelectedDepartmentId, (id) => brands.filter(b => b.departmentId === id).reduce((acc, b) => acc + documentTypes.filter(dt => dt.brandId === b.id).reduce((acc2, dt) => acc2 + documents.filter(doc => doc.documentTypeId === dt.id).length, 0), 0)) : (
                 <div className="flex flex-wrap gap-8 p-4">
                     {visibleDepartments.map(d => {
                         const count = brands.filter(b => b.departmentId === d.id).reduce((acc, b) => acc + documentTypes.filter(dt => dt.brandId === b.id).reduce((acc2, dt) => acc2 + documents.filter(doc => doc.documentTypeId === dt.id).length, 0), 0);
@@ -281,6 +375,22 @@ const DocumentRegistry: React.FC = () => {
             {/* Full-width Options Bar */}
             <div className="absolute top-0 left-0 right-0 h-[60px] bg-white border-b border-surface-border px-[40px] flex items-center justify-between z-10 transition-all duration-300">
                 <div className="flex items-center gap-4 flex-1">
+                    {/* View Toggle */}
+                    <div className="flex bg-surface-background border border-surface-border rounded-xl p-0.5 shadow-sm shrink-0 mr-2">
+                        <button
+                            onClick={() => setIsAllDocsView(false)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!isAllDocsView ? 'bg-white text-brand-blue shadow-sm border border-surface-border/50' : 'text-content-muted hover:text-content-secondary'}`}
+                        >
+                            <FolderTree size={16} /> Folder View
+                        </button>
+                        <button
+                            onClick={() => setIsAllDocsView(true)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isAllDocsView ? 'bg-white text-brand-blue shadow-sm border border-surface-border/50' : 'text-content-muted hover:text-content-secondary'}`}
+                        >
+                            <Files size={16} /> All Documents
+                        </button>
+                    </div>
+
                     <div className="relative w-full max-w-md group">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-4 w-4 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
@@ -288,11 +398,55 @@ const DocumentRegistry: React.FC = () => {
                         <input
                             type="text"
                             className="block w-full pl-10 pr-3 py-1.5 border border-surface-border rounded-xl text-sm leading-5 bg-surface-background text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
-                            placeholder={`Search in ${selectedDocumentTypeId ? visibleDocuments.length + ' Documents' : 'Folders'}`}
+                            placeholder={isAllDocsView ? `Search in ${filteredAllDocs.length} Documents` : `Search in ${selectedDocumentTypeId ? visibleDocuments.length + ' Documents' : 'Folders'}`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+
+                    {isAllDocsView && (
+                        <div className="flex items-center gap-3 animate-fade-in pl-2 border-l border-surface-border">
+                            <select
+                                className="block w-40 pl-3 py-1.5 border border-surface-border rounded-xl text-sm bg-surface-background focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all text-content-primary"
+                                value={filterDepartment}
+                                onChange={(e) => {
+                                    setFilterDepartment(e.target.value);
+                                    setFilterCategory('all');
+                                    setFilterDocType('all');
+                                }}
+                            >
+                                <option value="all">All Departments</option>
+                                {uniqueDepartments.map(dept => (
+                                    <option key={dept} value={dept}>{dept}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="block w-36 pl-3 py-1.5 border border-surface-border rounded-xl text-sm bg-surface-background focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all text-content-primary"
+                                value={filterCategory}
+                                onChange={(e) => {
+                                    setFilterCategory(e.target.value);
+                                    setFilterDocType('all');
+                                }}
+                            >
+                                <option value="all">All Categories</option>
+                                {uniqueCategories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="block w-44 pl-3 py-1.5 border border-surface-border rounded-xl text-sm bg-surface-background focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all text-content-primary"
+                                value={filterDocType}
+                                onChange={(e) => setFilterDocType(e.target.value)}
+                            >
+                                <option value="all">All Document Types</option>
+                                {uniqueDocTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
@@ -306,7 +460,7 @@ const DocumentRegistry: React.FC = () => {
 
                         {isFilterOpen && (
                             <div className="absolute right-0 mt-2 w-56 bg-white border border-surface-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 p-4 animate-fade-in-up">
-                                {selectedDocumentTypeId ? (
+                                {isAllDocsView || selectedDocumentTypeId ? (
                                     <>
                                         <h4 className="text-[10px] font-bold text-content-muted uppercase tracking-wider mb-2">Sort Documents</h4>
                                         <div className="space-y-1 mb-4">
@@ -354,6 +508,7 @@ const DocumentRegistry: React.FC = () => {
                             </div>
                         )}
                     </div>
+                    {/* Always show grid/list toggle since either folders or documents support it */}
                     <div className="flex bg-surface-background border border-surface-border rounded-xl p-0.5 shadow-sm shrink-0">
                         <button
                             onClick={() => setViewMode('grid')}
@@ -372,13 +527,13 @@ const DocumentRegistry: React.FC = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="animate-fade-in mt-2">
+            <div className="animate-fade-in mt-4 border-t border-transparent pt-2">
                 {renderContent()}
             </div>
 
             {/* Table pagination placeholder (if showing documents) */}
-            {selectedDocumentTypeId && visibleDocuments.length > 0 && (
-                <div className="flex items-center justify-end mt-4 text-sm text-content-secondary gap-4 pr-4">
+            {(isAllDocsView ? filteredAllDocs.length > 0 : selectedDocumentTypeId && visibleDocuments.length > 0) && (
+                <div className="flex items-center justify-end mt-2 text-sm text-content-secondary gap-4 pr-4 pb-4">
                     <div className="flex items-center gap-2">
                         <span>Rows per page:</span>
                         <select className="bg-transparent border-none outline-none font-medium cursor-pointer">
@@ -388,7 +543,7 @@ const DocumentRegistry: React.FC = () => {
                         </select>
                     </div>
                     <div>
-                        1-{visibleDocuments.length} of {visibleDocuments.length}
+                        1-{isAllDocsView ? filteredAllDocs.length : visibleDocuments.length} of {isAllDocsView ? filteredAllDocs.length : visibleDocuments.length}
                     </div>
                     <div className="flex items-center gap-2">
                         <button className="p-1 text-content-muted hover:text-content-primary transition-colors disabled:opacity-50" disabled><ChevronRight size={16} className="rotate-180" /></button>
