@@ -6,6 +6,7 @@ import {
     MonitorSmartphone,
     Star,
     History,
+    BookOpen,
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -33,7 +34,7 @@ const Dashboard: React.FC = () => {
                         <div className="h-6 w-1.5 bg-brand-blue rounded-full"></div>
                         <h2 className="text-lg font-bold text-content-primary tracking-wide">Apps</h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
 
                         {/* Administration Card */}
                         <div className="group relative bg-surface-card rounded-2xl p-5 flex items-center gap-5 cursor-pointer overflow-hidden border border-surface-border shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -77,6 +78,24 @@ const Dashboard: React.FC = () => {
                             <div className="flex flex-col">
                                 <span className="font-bold text-content-primary text-lg">Masters</span>
                                 <span className="text-xs text-content-muted font-medium mt-0.5">Core data configuration</span>
+                            </div>
+                            <div className="ml-auto w-8 h-8 rounded-full border border-surface-border flex items-center justify-center group-hover:border-brand-blue/30 group-hover:bg-brand-light/20 transition-all opacity-opacity flex-shrink-0">
+                                <div className="w-1.5 h-1.5 rounded-full bg-content-muted group-hover:bg-brand-blue transition-colors"></div>
+                            </div>
+                        </div>
+
+                        {/* Recipe Book Card */}
+                        <div
+                            className="group relative bg-surface-card rounded-2xl p-5 flex items-center gap-5 cursor-pointer overflow-hidden border border-surface-border shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                            onClick={() => navigate('/home')}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="w-14 h-14 rounded-2xl bg-brand-blue flex flex-shrink-0 items-center justify-center shadow-md group-hover:shadow-[0_0_20px_rgba(29,112,209,0.4)] transition-all duration-300">
+                                <BookOpen size={28} strokeWidth={1.5} className="text-white transition-transform duration-300 group-hover:scale-110" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-content-primary text-lg">Recipe Book</span>
+                                <span className="text-xs text-content-muted font-medium mt-0.5">Manage culinary standards and preparations</span>
                             </div>
                             <div className="ml-auto w-8 h-8 rounded-full border border-surface-border flex items-center justify-center group-hover:border-brand-blue/30 group-hover:bg-brand-light/20 transition-all opacity-opacity flex-shrink-0">
                                 <div className="w-1.5 h-1.5 rounded-full bg-content-muted group-hover:bg-brand-blue transition-colors"></div>

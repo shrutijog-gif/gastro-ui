@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { categories } from '../data/mockData';
 
 const CategoryList: React.FC = () => {
@@ -8,16 +7,6 @@ const CategoryList: React.FC = () => {
 
     return (
         <div className="h-full animate-fade-in-up">
-            <header className="flex items-center gap-4 mb-8">
-                <button
-                    onClick={() => navigate('/')}
-                    className="p-2 rounded-lg text-content-muted hover:bg-surface-card hover:text-content-primary transition-colors border border-transparent hover:border-surface-border"
-                >
-                    <ArrowLeft size={24} />
-                </button>
-                <h1 className="text-2xl font-bold text-content-primary tracking-tight">Select Category</h1>
-            </header>
-
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {categories.map((category) => (
                     <button

@@ -113,7 +113,7 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                                     <tr>
                                         <th className="px-3 py-2 rounded-l-md font-semibold font-sans">Item</th>
                                         <th className="px-3 py-2 w-16 text-right font-semibold font-sans">Qty</th>
-                                        <th className="px-3 py-2 w-16 text-right rounded-r-md font-semibold font-sans">UoM</th>
+                                        <th className="px-3 py-2 w-16 text-left rounded-r-md font-semibold font-sans">UoM</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-surface-border/50">
@@ -139,7 +139,7 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                                                 <td className="px-3 py-3 text-right font-mono text-xs font-medium text-content-primary">
                                                     {qty}
                                                 </td>
-                                                <td className="px-3 py-3 text-right font-mono text-xs font-medium text-content-secondary">
+                                                <td className="px-3 py-3 text-left font-mono text-xs font-medium text-content-secondary">
                                                     {uom}
                                                 </td>
                                             </tr>
@@ -404,9 +404,9 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
                                     >
                                         {ing.name}
                                     </span>
-                                    <div className="flex text-content-muted gap-2 text-xs">
-                                        <span className="w-12 text-right">{ing.netQty}</span>
-                                        <span className="w-8">{ing.yield}</span>
+                                    <div className="flex text-content-muted gap-2 text-xs justify-end pr-2">
+                                        <span className="w-12 text-right font-mono text-content-primary">{ing.netQty.match(/^([\d.]+)/)?.[1] || ing.netQty}</span>
+                                        <span className="w-14 text-left font-mono">{ing.netQty.match(/[a-zA-Z]+$/)?.[0] || ''}</span>
                                     </div>
                                 </div>
                             ))}

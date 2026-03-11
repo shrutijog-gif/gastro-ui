@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
-import { ArrowLeft, Search, Clock, Flame } from 'lucide-react';
+import { Search, Clock, Flame } from 'lucide-react';
 import { categories, recipes } from '../data/mockData';
 
 const ItemList: React.FC = () => {
@@ -9,7 +9,6 @@ const ItemList: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { isSidebarOpen } = useOutletContext<{ isSidebarOpen: boolean }>();
 
-    const activeCategory = categories.find(c => c.id === categoryId);
     const categoryRecipes = recipes.filter(r =>
         r.categoryId === categoryId &&
         r.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -18,8 +17,8 @@ const ItemList: React.FC = () => {
     return (
         <div className="h-full flex flex-col animate-fade-in-up">
             {/* Edge-to-Edge Category Strip */}
-            <div className={`absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 transition-all duration-300 ${isSidebarOpen ? 'px-10' : 'px-6'}`}>
-                <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar w-full">
+            <div className={`absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 transition-all duration-300 flex items-center justify-between gap-4 py-2 ${isSidebarOpen ? 'px-10' : 'px-6'}`}>
+                <div className="flex overflow-x-auto gap-2 no-scrollbar flex-1">
                     {categories.map((cat) => (
                         <button
                             key={cat.id}
@@ -33,34 +32,22 @@ const ItemList: React.FC = () => {
                         </button>
                     ))}
                 </div>
-            </div>
 
-            {/* Header & Controls */}
-            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${isSidebarOpen ? 'mt-16 mb-6' : 'mt-14 px-6 pt-6 mb-6'}`}>
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate('/categories')}
-                        className="p-2 rounded-lg text-content-muted hover:bg-surface-card hover:text-content-primary transition-colors border border-transparent hover:border-surface-border"
-                    >
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 className="text-2xl font-bold text-content-primary tracking-tight">{activeCategory?.name || 'Items'}</h1>
-                </div>
-
-                <div className="relative w-full sm:w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" size={16} />
+                {/* Compact Search Box */}
+                <div className="relative w-48 sm:w-64 shrink-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted" size={14} />
                     <input
                         type="text"
                         placeholder="Search recipes..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 text-sm rounded-brand border border-surface-border bg-surface-background focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue transition-all shadow-sm"
+                        className="w-full pl-8 pr-4 py-1.5 text-xs rounded-full border border-surface-border bg-surface-background focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue transition-all shadow-sm"
                     />
                 </div>
             </div>
 
             {/* Items Grid */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-300 ${isSidebarOpen ? '' : 'px-6 pb-6'}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-300 pt-16 ${isSidebarOpen ? '' : 'px-6 pb-6'}`}>
                 {categoryRecipes.length > 0 ? (
                     categoryRecipes.map((recipe) => (
                         <button

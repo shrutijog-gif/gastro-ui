@@ -6,7 +6,7 @@ import { categories, recipes } from '../data/mockData';
 const Layout: React.FC = () => {
     const location = useLocation();
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [customBreadcrumbs, setCustomBreadcrumbs] = useState<React.ReactNode | null>(null);
 
     // Generate breadcrumbs based on current route
