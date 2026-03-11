@@ -18,18 +18,23 @@ const Layout: React.FC = () => {
         if (paths[0] === 'dashboard') {
             crumbs = [{ label: 'Dashboard', path: '/dashboard' }];
         } else if (paths[0] === 'home') {
-            crumbs = [{ label: 'Recipe Book', path: '/home' }];
+            crumbs.push({ label: 'Recipe Book', path: '/home' });
         } else if (paths[0] === 'categories') {
-            crumbs.push({ label: 'Categories', path: '/categories' });
+            crumbs.push({ label: 'Recipe Book', path: '/home' });
+            crumbs.push({ label: 'Finished Recipes', path: '/categories' });
         } else if (paths[0] === 'items' && paths[1]) {
+            crumbs.push({ label: 'Recipe Book', path: '/home' });
+            crumbs.push({ label: 'Finished Recipes', path: '/categories' });
             const category = categories.find(c => c.id === paths[1]);
             if (category) {
                 crumbs.push({ label: category.name, path: `/items/${category.id}` });
             }
         } else if (paths[0] === 'recipe' && paths[1]) {
+            crumbs.push({ label: 'Recipe Book', path: '/home' });
+            crumbs.push({ label: 'Finished Recipes', path: '/categories' });
             const recipe = recipes.find(r => r.id === paths[1]);
             if (recipe) {
-                // Try to find the category to build full path Recipe Book > Category > Recipe
+                // Try to find the category to build full path
                 const category = categories.find(c => c.id === recipe.categoryId);
                 if (category) {
                     crumbs.push({ label: category.name, path: `/items/${category.id}` });
@@ -126,8 +131,8 @@ const Layout: React.FC = () => {
 
                 {/* Main Content */}
                 <main className={`flex-1 overflow-y-auto relative transition-all duration-300 ${isFocusMode || (!isSidebarOpen && location.pathname.startsWith('/recipe/'))
-                        ? 'p-0'
-                        : 'p-[40px]'
+                    ? 'p-0'
+                    : 'p-[40px]'
                     }`}>
                     <div className="w-full h-full space-y-6">
                         <Outlet context={{ isSidebarOpen, setCustomBreadcrumbs, isFocusMode, setIsFocusMode }} />

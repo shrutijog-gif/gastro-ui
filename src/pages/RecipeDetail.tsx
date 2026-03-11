@@ -442,6 +442,10 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
     const [subSubRecipeId, setSubSubRecipeId] = useState<string | null>(null);
     const subSubRecipe = subSubRecipeId ? recipes.find(r => r.id === subSubRecipeId) : null;
 
+    useEffect(() => {
+        setSubSubRecipeId(null);
+    }, [initialSubRecipeId]);
+
     // Manage accordion states for columns. Defaulting "Ingredients" and "Instructions" to open.
     const [baseExpanded, setBaseExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
     const [subExpanded, setSubExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
@@ -570,17 +574,21 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
                         </h1>
                     </div>
                 </div>
+                <button
+                    onClick={onClose}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-background border border-surface-border text-content-muted hover:text-content-primary hover:bg-surface-hover hover:border-content-muted transition-all shadow-sm shrink-0"
+                    title="Close Vertical View"
+                >
+                    <X size={16} />
+                </button>
             </header>
 
             {/* Columns Layout */}
             <div className="flex-1 flex divide-x divide-surface-border overflow-hidden">
                 {/* Column 1: Main Recipe */}
                 <div className="flex-1 flex flex-col bg-surface-background h-full min-w-[300px]">
-                    <div className="p-3 border-b border-surface-border bg-slate-50/60 px-6 shrink-0 flex justify-between items-center">
-                        <h2 className="font-bold text-slate-700 uppercase tracking-wider text-xs truncate mr-2">Main Recipe - {baseRecipe.name}</h2>
-                        <button onClick={onClose} className="text-slate-500 hover:text-slate-800 transition-colors shrink-0 p-1 rounded-md hover:bg-slate-200/50">
-                            <X size={14} />
-                        </button>
+                    <div className="p-3 border-b border-surface-border bg-slate-50/60 px-6 shrink-0 flex items-center">
+                        <h2 className="font-bold text-slate-700 uppercase tracking-wider text-xs truncate">Main Recipe - {baseRecipe.name}</h2>
                     </div>
                     {renderColumnContent(baseRecipe, baseExpanded, setBaseExpanded, onIngredientClick)}
                 </div>
