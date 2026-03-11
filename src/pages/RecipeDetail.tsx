@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
-import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, X, Link as LinkIcon, ChevronDown, ChevronRight, Layers, List, Utensils } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Users, ChefHat, AlertTriangle, X, Link as LinkIcon, ChevronDown, ChevronRight, Layers, List, Utensils, Maximize2, Minimize2 } from 'lucide-react';
 import { recipes, categories } from '../data/mockData';
-import type { Recipe, Ingredient } from '../data/mockData';
+import type { Recipe, Ingredient, Instruction } from '../data/mockData';
 
 // Helper to auto-link ingredient names in instruction text
 const renderInstructionText = (text: string, ingredients: Ingredient[], onIngredientClick: (id: string) => void) => {
@@ -50,26 +50,94 @@ const renderInstructionText = (text: string, ingredients: Ingredient[], onIngred
     return result;
 };
 
+// --- Sub-component for rendering an Instruction Item with optional Sub-steps ---
+interface InstructionItemProps {
+    instruction: Instruction;
+    ingredients: Ingredient[];
+    onIngredientClick: (id: string) => void;
+    isSubStep?: boolean;
+}
+
+const InstructionItem: React.FC<InstructionItemProps> = ({ instruction, ingredients, onIngredientClick, isSubStep = false }) => {
+    const [isExpanded, setIsExpanded] = useState(true);
+    const hasSubSteps = instruction.subSteps && instruction.subSteps.length > 0;
+
+    return (
+        <div className={`flex flex-col gap-3 group ${isSubStep ? 'mt-3 relative' : ''}`}>
+            {isSubStep && (
+                <div className="absolute -left-5 top-4 w-4 border-t-2 border-surface-border rounded-bl-lg pointer-events-none" />
+            )}
+
+            <div className="flex gap-4">
+                <div className={`flex-shrink-0 flex items-center justify-center font-bold transition-all shadow-sm ${isSubStep
+                    ? 'w-6 h-6 rounded-md bg-surface-background border border-surface-border text-content-muted text-[10px]'
+                    : 'w-8 h-8 rounded-lg bg-surface-background border border-surface-border text-content-muted group-hover:bg-brand-blue group-hover:border-brand-blue group-hover:text-white'
+                    }`}>
+                    {instruction.step}
+                </div>
+
+                <div className={`pt-1 text-sm leading-relaxed transition-colors flex-1 ${isSubStep
+                    ? 'text-content-secondary'
+                    : 'text-content-secondary group-hover:text-content-primary'
+                    }`}>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>{renderInstructionText(instruction.text, ingredients, onIngredientClick)}</div>
+
+                        {hasSubSteps && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                                className="p-1 rounded bg-surface-background border border-surface-border hover:bg-brand-light/30 hover:border-brand-blue/30 text-content-muted hover:text-brand-blue transition-all flex-shrink-0 mt-0.5"
+                                title={isExpanded ? "Collapse sub-steps" : "Expand sub-steps"}
+                            >
+                                {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Render Sub Steps */}
+            {hasSubSteps && isExpanded && (
+                <div className="pl-4 ml-4 border-l-2 border-surface-border space-y-4 pb-2 mt-1">
+                    {instruction.subSteps!.map((subStep, idx) => (
+                        <InstructionItem
+                            key={idx}
+                            instruction={subStep}
+                            ingredients={ingredients}
+                            onIngredientClick={onIngredientClick}
+                            isSubStep={true}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 // --- Sub-component to render the actual recipe content ---
 interface RecipeContentProps {
     recipe: Recipe;
     depth: number;
     onClose: () => void;
-    onIngredientClick: (linkedId: string) => void;
+    onIngredientClick: (id: string) => void;
+    isFocusMode?: boolean;
+    setIsFocusMode?: (focus: boolean) => void;
 }
 
-const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, onIngredientClick }) => {
+const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, onIngredientClick, isFocusMode, setIsFocusMode }) => {
     return (
         <div className="h-full bg-surface-card flex flex-col overflow-hidden font-sans">
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-5 border-b border-surface-border bg-surface-card z-10 shrink-0">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-surface-background transition-colors text-content-muted hover:text-content-primary border border-transparent hover:border-surface-border"
-                    >
-                        {depth === 0 ? <ArrowLeft size={24} /> : <X size={24} />}
-                    </button>
+                    {depth > 0 && (
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-lg hover:bg-surface-background transition-colors text-content-muted hover:text-content-primary border border-transparent hover:border-surface-border"
+                        >
+                            <X size={24} />
+                        </button>
+                    )}
                     <h1 className="text-xl font-bold tracking-tight text-content-primary flex items-center gap-2">
                         {recipe.serialNumber && (
                             <span className="text-sm font-medium text-content-muted/60">
@@ -85,20 +153,29 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                         <span className="text-[10px] font-bold text-content-muted uppercase tracking-wider">Yield</span>
                         <span className="text-content-primary">1 Portion</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-surface-background px-3 py-1.5 rounded-lg border border-surface-border">
+                    <div className="flex items-center gap-3 bg-surface-background px-3 py-1.5 rounded-full border border-surface-border">
                         <Clock size={16} className="text-brand-blue" />
-                        {recipe.prepTime}
+                        <span className="text-sm font-semibold">{recipe.prepTime}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-surface-background px-3 py-1.5 rounded-lg border border-surface-border">
+                    <div className="flex items-center gap-3 bg-surface-background px-3 py-1.5 rounded-full border border-surface-border">
                         <Flame size={16} className="text-orange-500" />
-                        {recipe.calories}
+                        <span className="text-sm font-semibold">{recipe.calories}</span>
                     </div>
+                    {!isFocusMode && setIsFocusMode && (
+                        <button
+                            onClick={() => setIsFocusMode(true)}
+                            className="ml-2 flex items-center justify-center w-8 h-8 bg-surface-background hover:bg-brand-light/30 border border-surface-border hover:border-brand-blue/30 text-content-muted hover:text-brand-blue rounded-full transition-all group"
+                            title="Enter Focus Mode"
+                        >
+                            <Maximize2 size={16} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                    )}
                 </div>
             </header>
 
             {/* Main Content - 3 Column Layout (Unified Scroll) */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-12 divide-x divide-surface-border">
+            <div className={`flex-1 overflow-y-auto custom-scrollbar ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : 'min-h-[calc(100vh-220px)]'}`}>
+                <div className="grid grid-cols-12 divide-x divide-surface-border min-h-full">
 
                     {/* Column 1: Ingredients (3 cols) */}
                     <div className="col-span-3 bg-surface-background flex flex-col">
@@ -161,15 +238,13 @@ const RecipeContent: React.FC<RecipeContentProps> = ({ recipe, depth, onClose, o
                         </div>
                         <div className="flex-1 p-6 scroll-smooth">
                             <div className="space-y-6">
-                                {recipe.instructions.map((inst) => (
-                                    <div key={inst.step} className="flex gap-4 group">
-                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-surface-background border border-surface-border text-content-muted font-bold flex items-center justify-center group-hover:bg-brand-blue group-hover:border-brand-blue group-hover:text-white transition-all shadow-sm">
-                                            {inst.step}
-                                        </div>
-                                        <div className="pt-1.5 text-sm leading-relaxed text-content-secondary group-hover:text-content-primary transition-colors">
-                                            {renderInstructionText(inst.text, recipe.ingredients, onIngredientClick)}
-                                        </div>
-                                    </div>
+                                {recipe.instructions.map((inst, idx) => (
+                                    <InstructionItem
+                                        key={idx}
+                                        instruction={inst}
+                                        ingredients={recipe.ingredients}
+                                        onIngredientClick={onIngredientClick}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -336,11 +411,16 @@ const DraggableStickyNote: React.FC<DraggableStickyNoteProps> = ({ recipe, index
                     <h4 className="font-bold uppercase text-[10px] tracking-wider mb-2 opacity-60 flex items-center gap-1.5 border-b border-amber-200 pb-1">
                         <ChefHat size={12} /> Prep Steps
                     </h4>
-                    <ol className="list-decimal pl-4 space-y-2">
-                        {recipe.instructions.map((inst, i) => (
-                            <li key={i} className="pl-1 leading-snug">{inst.text}</li>
+                    <div className="pl-2 space-y-3">
+                        {recipe.instructions.map((inst, idx) => (
+                            <InstructionItem
+                                key={idx}
+                                instruction={inst}
+                                ingredients={recipe.ingredients}
+                                onIngredientClick={() => { }} // Disabled inside sticky note
+                            />
                         ))}
-                    </ol>
+                    </div>
                 </div>
             </div>
         </div>,
@@ -428,19 +508,15 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
                 </button>
                 {expandedState.instructions && (
                     <div className="px-4 pb-4 space-y-3 mt-2">
-                        {recipe.instructions.map((inst) => (
-                            <div key={inst.step} className="flex gap-4">
-                                <div className="flex-shrink-0 w-6 h-6 rounded-md bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-bold flex items-center justify-center shadow-sm">
-                                    {inst.step}
-                                </div>
-                                <div className="pt-0.5 text-sm leading-relaxed text-content-primary">
-                                    {renderInstructionText(inst.text, recipe.ingredients, (id) => {
-                                        if (!isSubRecipe) {
-                                            onIngredientClick(id);
-                                        }
-                                    })}
-                                </div>
-                            </div>
+                        {recipe.instructions.map((inst, idx) => (
+                            <InstructionItem
+                                key={idx}
+                                instruction={inst}
+                                ingredients={recipe.ingredients}
+                                onIngredientClick={(id) => {
+                                    if (!isSubRecipe) onIngredientClick(id);
+                                }}
+                            />
                         ))}
                     </div>
                 )}
@@ -541,15 +617,13 @@ const RecipeHierarchyView: React.FC<RecipeHierarchyViewProps> = ({ baseRecipe, i
     // Helper to render tight instructions for accordion
     const renderTightInstructions = (recipe: Recipe, onLinkClick: (linkedId: string) => void) => (
         <div className="space-y-3 mt-3 ml-2 border-l-2 border-surface-border pl-4 py-1">
-            {recipe.instructions.map((inst) => (
-                <div key={inst.step} className="flex gap-3 group">
-                    <div className="flex-shrink-0 w-5 h-5 rounded-md bg-surface-card border border-surface-border text-content-muted text-[10px] font-bold flex items-center justify-center">
-                        {inst.step}
-                    </div>
-                    <div className="pt-0.5 text-xs leading-relaxed text-content-secondary">
-                        {renderInstructionText(inst.text, recipe.ingredients, onLinkClick)}
-                    </div>
-                </div>
+            {recipe.instructions.map((inst, idx) => (
+                <InstructionItem
+                    key={idx}
+                    instruction={inst}
+                    ingredients={recipe.ingredients}
+                    onIngredientClick={onLinkClick}
+                />
             ))}
         </div>
     );
@@ -591,18 +665,16 @@ const RecipeHierarchyView: React.FC<RecipeHierarchyViewProps> = ({ baseRecipe, i
                                 {baseRecipe.name}
                             </div>
                             <div className="space-y-4">
-                                {baseRecipe.instructions.map((inst) => (
-                                    <div key={inst.step} className="flex gap-4 group">
-                                        <div className="flex-shrink-0 w-6 h-6 rounded-md bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-bold flex items-center justify-center shadow-sm">
-                                            {inst.step}
-                                        </div>
-                                        <div className="pt-0.5 text-sm leading-relaxed text-content-primary">
-                                            {renderInstructionText(inst.text, baseRecipe.ingredients, (linkedId) => {
-                                                setSelectedSubId(linkedId);
-                                                setExpandedSubId(linkedId);
-                                            })}
-                                        </div>
-                                    </div>
+                                {baseRecipe.instructions.map((inst, idx) => (
+                                    <InstructionItem
+                                        key={idx}
+                                        instruction={inst}
+                                        ingredients={baseRecipe.ingredients}
+                                        onIngredientClick={(linkedId) => {
+                                            setSelectedSubId(linkedId);
+                                            setExpandedSubId(linkedId);
+                                        }}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -716,7 +788,14 @@ const RecipeHierarchyView: React.FC<RecipeHierarchyViewProps> = ({ baseRecipe, i
 const RecipeDetail: React.FC = () => {
     const navigate = useNavigate();
     const { recipeId } = useParams<{ recipeId: string }>();
-    const { isSidebarOpen } = useOutletContext<{ isSidebarOpen: boolean }>();
+
+    // Global layout state
+    const { isSidebarOpen, isFocusMode, setIsFocusMode } = useOutletContext<{
+        isSidebarOpen: boolean;
+        setCustomBreadcrumbs: (crumbs: React.ReactNode | null) => void;
+        isFocusMode: boolean;
+        setIsFocusMode: (focus: boolean) => void;
+    }>();
 
     // Manage stack of recipe IDs
     const [recipeStack, setRecipeStack] = useState<string[]>([]);
@@ -768,56 +847,70 @@ const RecipeDetail: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col animate-fade-in-up">
-            {/* Edge-to-Edge Category Strip */}
-            <div className={`absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 transition-all duration-300 ${isSidebarOpen ? 'px-10' : 'px-4'}`}>
-                <div className="flex items-center justify-between w-full h-[52px]">
-                    <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar max-w-[70%]">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => navigate(`/items/${cat.id}`)}
-                                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap border ${cat.id === categoryId
-                                    ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
-                                    : 'bg-surface-background text-content-secondary border-surface-border hover:border-brand-blue/40'
-                                    }`}
-                            >
-                                {cat.name}
-                            </button>
-                        ))}
-                    </div>
 
-                    {/* Display Mode Toggle */}
-                    <div className="flex bg-surface-background border border-surface-border rounded-lg p-0.5 shadow-sm shrink-0">
-                        <button
-                            onClick={() => setDisplayMode('stack')}
-                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'stack' ? 'bg-white text-brand-blue shadow-sm border border-surface-border/50' : 'text-content-secondary hover:text-brand-blue'}`}
-                        >
-                            Overlay View
-                        </button>
-                        <button
-                            onClick={() => setDisplayMode('sticky')}
-                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'sticky' ? 'bg-amber-100 text-amber-900 shadow-sm border border-amber-200/50' : 'text-content-secondary hover:text-amber-600'}`}
-                        >
-                            Sticky Notes
-                        </button>
-                        <button
-                            onClick={() => setDisplayMode('hierarchy')}
-                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'hierarchy' ? 'bg-indigo-100 text-indigo-900 shadow-sm border border-indigo-200/50' : 'text-content-secondary hover:text-indigo-600'}`}
-                        >
-                            Hierarchy
-                        </button>
-                        <button
-                            onClick={() => setDisplayMode('vertical-info')}
-                            className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'vertical-info' ? 'bg-emerald-100 text-emerald-900 shadow-sm border border-emerald-200/50' : 'text-content-secondary hover:text-emerald-600'}`}
-                        >
-                            Vertical Info
-                        </button>
+            {/* Focus Mode Floating Exit Button */}
+            {isFocusMode && (
+                <button
+                    onClick={() => setIsFocusMode(false)}
+                    className="fixed top-6 right-6 w-12 h-12 bg-white text-content-primary rounded-full shadow-lg border border-surface-border flex items-center justify-center z-50 hover:bg-surface-background hover:text-brand-blue hover:scale-105 transition-all group"
+                    title="Exit Focus Mode"
+                >
+                    <Minimize2 size={24} className="group-hover:stroke-brand-blue transition-colors" />
+                </button>
+            )}
+
+            {/* Edge-to-Edge Category Strip */}
+            {!isFocusMode && (
+                <div className={`absolute top-0 left-0 right-0 bg-white border-b border-surface-border z-10 transition-all duration-300 ${isSidebarOpen ? 'px-10' : 'px-4'}`}>
+                    <div className="flex items-center justify-between w-full h-[52px]">
+                        <div className="flex overflow-x-auto gap-2 py-3 no-scrollbar max-w-[70%]">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => navigate(`/items/${cat.id}`)}
+                                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap border ${cat.id === categoryId
+                                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                                        : 'bg-surface-background text-content-secondary border-surface-border hover:border-brand-blue/40'
+                                        }`}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Display Mode Toggle */}
+                        <div className="flex bg-surface-background border border-surface-border rounded-lg p-0.5 shadow-sm shrink-0">
+                            <button
+                                onClick={() => setDisplayMode('stack')}
+                                className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'stack' ? 'bg-white text-brand-blue shadow-sm border border-surface-border/50' : 'text-content-secondary hover:text-brand-blue'}`}
+                            >
+                                Overlay View
+                            </button>
+                            <button
+                                onClick={() => setDisplayMode('sticky')}
+                                className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'sticky' ? 'bg-amber-100 text-amber-900 shadow-sm border border-amber-200/50' : 'text-content-secondary hover:text-amber-600'}`}
+                            >
+                                Sticky Notes
+                            </button>
+                            <button
+                                onClick={() => setDisplayMode('hierarchy')}
+                                className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'hierarchy' ? 'bg-indigo-100 text-indigo-900 shadow-sm border border-indigo-200/50' : 'text-content-secondary hover:text-indigo-600'}`}
+                            >
+                                Hierarchy
+                            </button>
+                            <button
+                                onClick={() => setDisplayMode('vertical-info')}
+                                className={`px-3 py-1.5 text-xs font-bold transition-colors rounded-md ${displayMode === 'vertical-info' ? 'bg-emerald-100 text-emerald-900 shadow-sm border border-emerald-200/50' : 'text-content-secondary hover:text-emerald-600'}`}
+                            >
+                                Vertical Info
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Main Recipe Detail Container */}
-            <div className={`flex-1 relative overflow-hidden flex bg-surface-background transition-all duration-300 ${isSidebarOpen ? 'mt-14 rounded-xl border border-surface-border shadow-sm' : 'mt-[52px]'}`}>
+            <div className={`flex-1 relative overflow-hidden flex bg-surface-background transition-all duration-300 ${isFocusMode ? 'mt-0 rounded-none border-0' : isSidebarOpen ? 'mt-14 rounded-xl border border-surface-border shadow-sm' : 'mt-[52px]'}`}>
                 {/* Always render the base stack */}
                 {recipeStack.map((id, index) => {
                     const recipe = recipes.find(r => r.id === id);

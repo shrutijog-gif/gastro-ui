@@ -8,8 +8,9 @@ export interface Ingredient {
 }
 
 export interface Instruction {
-    step: number;
+    step: number | string;
     text: string;
+    subSteps?: Instruction[];
 }
 
 export interface Recipe {
@@ -37,12 +38,63 @@ export const categories: Category[] = [
     { id: 'pizza', name: 'Pizzas', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800' },
     { id: 'rice', name: 'Rice Items', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=800' },
     { id: 'salad', name: 'Salads', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800' },
-    { id: 'dessert', name: 'Desserts', image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&q=80&w=800' },
     { id: 'drink', name: 'Drinks', image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&q=80&w=800' },
 ];
 
 export const recipes: Recipe[] = [
-    // --- BURGERS ---
+    // --- COMPLEX RECIPES ---
+    {
+        id: 'complex-ramen',
+        serialNumber: 'SR-999',
+        name: 'Master Shio Ramen',
+        categoryId: 'appetizer',
+        image: 'https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Ramen Noodles', netQty: '120g', code: 'NP-01', yield: '100%' },
+            { name: 'Pork Chashu', netQty: '2 slices', code: 'MT-05', yield: '100%', linkedRecipeId: 'chashu-prep' },
+            { name: 'Ajitsuke Tamago (Egg)', netQty: '1 pc', code: 'EG-02', yield: '100%' },
+            { name: 'Nori (Seaweed)', netQty: '1 sheet', code: 'SW-01', yield: '100%' },
+            { name: 'Scallions', netQty: '15g', code: 'VEG-11', yield: '100%' },
+            { name: 'Shio Tare', netQty: '30ml', code: 'SAU-99', yield: '100%' },
+            { name: 'Master Broth', netQty: '300ml', code: 'BR-01', yield: '100%' }
+        ],
+        instructions: [
+            {
+                step: 1, text: 'Prep Garnishes and Bowls', subSteps: [
+                    { step: '1.1', text: 'Finely chop the scallions and set aside on a damp towel.' },
+                    { step: '1.2', text: 'Slice the Pork Chashu into 5mm thick rounds.' },
+                    { step: '1.3', text: 'Pre-heat serving bowls with boiling water for 2 minutes.' }
+                ]
+            },
+            { step: 2, text: 'Boil the Master Broth in a saucepan until it reaches a rolling boil, then reduce to simmer.' },
+            {
+                step: 3, text: 'Noodle Preparation', subSteps: [
+                    { step: '3.1', text: 'Bring a large pot of unsalted water to a vigorous boil.' },
+                    { step: '3.2', text: 'Loosen the Ramen Noodles and drop into boiling water.' },
+                    { step: '3.3', text: 'Stir immediately to prevent sticking.' },
+                    { step: '3.4', text: 'Boil for exactly 1 minute and 45 seconds for firm texture (barikata).' }
+                ]
+            },
+            { step: 4, text: 'Discard the hot water from the pre-heated serving bowls.' },
+            { step: 5, text: 'Add 30ml of Shio Tare to the empty, hot bowl.' },
+            { step: 6, text: 'Pour in 300ml of the simmering Master Broth directly over the tare.' },
+            { step: 7, text: 'Thoroughly drain the boiling noodles using a noodle basket, shaking off excess water vigorously.' },
+            { step: 8, text: 'Gently fold the noodles into the broth, arranging them neatly with chopsticks.' },
+            {
+                step: 9, text: 'Plating the Toppings', subSteps: [
+                    { step: '9.1', text: 'Place the Pork Chashu slices slightly overlapping on the left edge.' },
+                    { step: '9.2', text: 'Cut the Ajitsuke Tamago in half and place near the top edge.' },
+                    { step: '9.3', text: 'Mound the chopped scallions directly in the center.' }
+                ]
+            },
+            { step: 10, text: 'Tuck the sheet of Nori against the back rim of the bowl.' },
+            { step: 11, text: 'Add a final few drops of aromatic aroma oil over the scallions.' },
+            { step: 12, text: 'Serve immediately while piping hot.' }
+        ],
+        allergens: ['Gluten', 'Egg', 'Soy', 'Pork'],
+        prepTime: '25 mins',
+        calories: '750 kcal',
+    },
     {
         id: 'ch-burger',
         serialNumber: 'SR-004',
