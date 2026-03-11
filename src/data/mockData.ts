@@ -336,6 +336,53 @@ export const recipes: Recipe[] = [
         prepTime: '6 mins',
         calories: '600 kcal',
     },
+    // --- RAMEN SUB-RECIPES ---
+    {
+        id: 'chashu-prep',
+        serialNumber: 'SR-201',
+        name: 'Pork Chashu',
+        categoryId: 'appetizer',
+        image: 'https://images.unsplash.com/photo-1623992525791-768f564dcff7?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Pork Belly (Rolled)', netQty: '2kg', code: 'MT-051', yield: '80%' },
+            { name: 'Soy Sauce', netQty: '500ml', code: 'SAU-01', yield: '100%' },
+            { name: 'Mirin', netQty: '200ml', code: 'SAU-02', yield: '100%' },
+            { name: 'Sake', netQty: '100ml', code: 'SAU-03', yield: '100%' },
+            { name: 'Sugar', netQty: '100g', code: 'SUG-01', yield: '100%' },
+            { name: 'Master Broth', netQty: '1L', code: 'BR-01', yield: '100%' },
+            { name: 'Master Sauce Base', netQty: '200ml', code: 'SAU-100', yield: '100%', linkedRecipeId: 'master-sauce' },
+        ],
+        instructions: [
+            { step: 1, text: 'Sear the rolled pork belly on all sides until golden brown.' },
+            { step: 2, text: 'Combine Soy Sauce, Mirin, Sake, Sugar, Master Broth, and Master Sauce Base in a braising pot.' },
+            { step: 3, text: 'Simmer the pork belly in the liquid for 3-4 hours on low heat.' },
+            { step: 4, text: 'Remove from heat and let the pork cool entirely in the braising liquid overnight.' }
+        ],
+        allergens: ['Soy'],
+        prepTime: '4 hrs',
+        calories: '850 kcal',
+    },
+    {
+        id: 'master-sauce',
+        serialNumber: 'SR-202',
+        name: 'Master Sauce Base',
+        categoryId: 'appetizer',
+        image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Soy Sauce', netQty: '1L', code: 'SAU-01', yield: '100%' },
+            { name: 'Brown Sugar', netQty: '200g', code: 'SUG-02', yield: '100%' },
+            { name: 'Sake', netQty: '200ml', code: 'SAU-03', yield: '100%' },
+            { name: 'Garlic (whole)', netQty: '50g', code: 'VEG-20', yield: '80%' },
+        ],
+        instructions: [
+            { step: 1, text: 'Combine all ingredients in a saucepan.' },
+            { step: 2, text: 'Bring to a gentle boil, then simmer for 20 minutes.' },
+            { step: 3, text: 'Strain out the garlic and let the sauce cool before use.' }
+        ],
+        allergens: ['Soy'],
+        prepTime: '30 mins',
+        calories: '150 kcal',
+    },
     // --- SUB-SUB BASE INGREDIENTS ---
     {
         id: 'mayo-base',

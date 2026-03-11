@@ -433,32 +433,31 @@ interface RecipeVerticalInfoViewProps {
     baseRecipe: Recipe;
     initialSubRecipeId: string;
     onClose: () => void;
+    onCloseSubRecipe: () => void;
     onIngredientClick: (id: string) => void;
 }
 
-const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRecipe, initialSubRecipeId, onClose, onIngredientClick }) => {
+const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRecipe, initialSubRecipeId, onClose, onCloseSubRecipe, onIngredientClick }) => {
     const subRecipe = recipes.find(r => r.id === initialSubRecipeId);
+    const [subSubRecipeId, setSubSubRecipeId] = useState<string | null>(null);
+    const subSubRecipe = subSubRecipeId ? recipes.find(r => r.id === subSubRecipeId) : null;
 
-    // Manage accordion states for both columns. Defaulting "Ingredients" and "Instructions" to open.
+    // Manage accordion states for columns. Defaulting "Ingredients" and "Instructions" to open.
     const [baseExpanded, setBaseExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
     const [subExpanded, setSubExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
+    const [subSubExpanded, setSubSubExpanded] = useState<Record<string, boolean>>({ ingredients: true, instructions: true });
 
     const toggleAccordion = (setter: React.Dispatch<React.SetStateAction<Record<string, boolean>>>, key: string) => {
         setter(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const renderColumnContent = (recipe: Recipe, expandedState: Record<string, boolean>, setExpandedState: React.Dispatch<React.SetStateAction<Record<string, boolean>>>, isSubRecipe: boolean) => (
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
-            {/* Header / Photo Card */}
-            <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-sm flex items-stretch h-32">
-                <img src={recipe.image} alt={recipe.name} className="w-32 h-full object-cover" />
-                <div className="p-4 flex flex-col justify-center flex-1">
-                    <h3 className="font-bold text-lg text-content-primary leading-tight">{recipe.name}</h3>
-                    {isSubRecipe && <span className="text-[10px] w-fit mt-1 px-1.5 py-0.5 rounded bg-brand-blue/10 text-brand-blue uppercase font-bold tracking-wider">Sub-Recipe</span>}
-                </div>
-            </div>
-
-            {/* Ingredients Accordion */}
+    const renderColumnContent = (
+        recipe: Recipe,
+        expandedState: Record<string, boolean>,
+        setExpandedState: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
+        onIngredientSelect?: (id: string) => void
+    ) => (
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">            {/* Ingredients Accordion */}
             <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-sm">
                 <button
                     className="w-full p-4 flex items-center justify-between hover:bg-surface-background transition-colors"
@@ -476,11 +475,11 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
                                 <div key={idx} className="flex py-1.5 border-b border-surface-border/50 last:border-0 justify-between items-center text-sm">
                                     <span
                                         onClick={() => {
-                                            if (!isSubRecipe && ing.linkedRecipeId) {
-                                                onIngredientClick(ing.linkedRecipeId);
+                                            if (onIngredientSelect && ing.linkedRecipeId) {
+                                                onIngredientSelect(ing.linkedRecipeId);
                                             }
                                         }}
-                                        className={`text-content-primary ${ing.linkedRecipeId ? 'text-brand-blue hover:text-brand-blue-hover cursor-pointer underline decoration-brand-blue/30 underline-offset-4' : ''}`}
+                                        className={`text-content-primary ${onIngredientSelect && ing.linkedRecipeId ? 'text-brand-blue hover:text-brand-blue-hover cursor-pointer underline decoration-brand-blue/30 underline-offset-4' : ''}`}
                                     >
                                         {ing.name}
                                     </span>
@@ -514,7 +513,7 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
                                 instruction={inst}
                                 ingredients={recipe.ingredients}
                                 onIngredientClick={(id) => {
-                                    if (!isSubRecipe) onIngredientClick(id);
+                                    if (onIngredientSelect) onIngredientSelect(id);
                                 }}
                             />
                         ))}
@@ -564,39 +563,55 @@ const RecipeVerticalInfoView: React.FC<RecipeVerticalInfoViewProps> = ({ baseRec
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-surface-border bg-surface-card shrink-0">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-background transition-colors text-content-muted hover:text-content-primary">
-                        <ArrowLeft size={20} />
-                    </button>
-                    <h1 className="text-lg font-bold text-content-primary flex items-center gap-2">
-                        {baseRecipe.name}
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase tracking-wider ml-2 flex items-center gap-1">
-                            <Layers size={10} /> Vertical Info
-                        </span>
-                    </h1>
+                    <div className="flex items-center gap-3">
+                        <img src={baseRecipe.image} alt={baseRecipe.name} className="w-8 h-8 rounded-md object-cover shadow-sm border border-black/5 shrink-0" />
+                        <h1 className="text-lg font-bold text-content-primary flex items-center gap-2">
+                            {baseRecipe.name}
+                        </h1>
+                    </div>
                 </div>
             </header>
 
-            {/* 2 Column Layout */}
+            {/* Columns Layout */}
             <div className="flex-1 flex divide-x divide-surface-border overflow-hidden">
                 {/* Column 1: Main Recipe */}
-                <div className="flex-1 flex flex-col bg-surface-background h-full">
-                    <div className="p-3 border-b border-surface-border bg-brand-light/20 px-6 shrink-0">
-                        <h2 className="font-bold text-brand-blue uppercase tracking-wider text-xs">Main Recipe</h2>
+                <div className="flex-1 flex flex-col bg-surface-background h-full min-w-[300px]">
+                    <div className="p-3 border-b border-surface-border bg-slate-50/60 px-6 shrink-0 flex justify-between items-center">
+                        <h2 className="font-bold text-slate-700 uppercase tracking-wider text-xs truncate mr-2">Main Recipe - {baseRecipe.name}</h2>
+                        <button onClick={onClose} className="text-slate-500 hover:text-slate-800 transition-colors shrink-0 p-1 rounded-md hover:bg-slate-200/50">
+                            <X size={14} />
+                        </button>
                     </div>
-                    {renderColumnContent(baseRecipe, baseExpanded, setBaseExpanded, false)}
+                    {renderColumnContent(baseRecipe, baseExpanded, setBaseExpanded, onIngredientClick)}
                 </div>
 
                 {/* Column 2: Sub-Recipe */}
-                <div className="flex-1 flex flex-col bg-surface-background/50 h-full">
-                    <div className="p-3 border-b border-surface-border bg-emerald-50 px-6 shrink-0">
-                        <h2 className="font-bold text-emerald-700 uppercase tracking-wider text-xs">Sub-Recipe</h2>
+                <div className="flex-1 flex flex-col bg-surface-background/50 h-full min-w-[300px]">
+                    <div className="p-3 border-b border-surface-border bg-emerald-50/60 px-6 shrink-0 flex justify-between items-center">
+                        <h2 className="font-bold text-emerald-700 uppercase tracking-wider text-xs truncate mr-2">Sub-Recipe - {subRecipe?.name}</h2>
+                        <button onClick={onCloseSubRecipe} className="text-emerald-700/50 hover:text-emerald-800 transition-colors shrink-0 p-1 rounded-md hover:bg-emerald-200/50">
+                            <X size={14} />
+                        </button>
                     </div>
                     {subRecipe ? (
-                        renderColumnContent(subRecipe, subExpanded, setSubExpanded, true)
+                        renderColumnContent(subRecipe, subExpanded, setSubExpanded, setSubSubRecipeId)
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-content-muted text-sm">Recipe not found</div>
                     )}
                 </div>
+
+                {/* Column 3: Sub-Sub-Recipe */}
+                {subSubRecipe && (
+                    <div className="flex-1 flex flex-col bg-surface-background/30 h-full min-w-[300px] animate-fade-in-right border-l border-surface-border">
+                        <div className="p-3 border-b border-surface-border bg-amber-50/60 px-6 shrink-0 flex justify-between items-center">
+                            <h2 className="font-bold text-amber-700 uppercase tracking-wider text-xs truncate mr-2">Sub-Sub-Recipe - {subSubRecipe.name}</h2>
+                            <button onClick={() => setSubSubRecipeId(null)} className="text-amber-700/50 hover:text-amber-800 transition-colors shrink-0 p-1 rounded-md hover:bg-amber-200/50">
+                                <X size={14} />
+                            </button>
+                        </div>
+                        {renderColumnContent(subSubRecipe, subSubExpanded, setSubSubExpanded)}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -980,16 +995,19 @@ const RecipeDetail: React.FC = () => {
                 )}
 
                 {/* DYNAMIC VERTICAL INFO OVERLAY */}
-                {displayMode === 'vertical-info' && (
+                {displayMode === 'vertical-info' && verticalInfoTriggerId && (
                     <div
                         className="absolute inset-y-0 right-0 z-[110] bg-surface-background shadow-[-10px_0_30px_-5px_rgba(0,0,0,0.3)] border-l border-surface-border transition-transform duration-300 ease-in-out"
                         style={{ width: '100%' }}
                     >
                         <RecipeVerticalInfoView
                             baseRecipe={recipes.find(r => r.id === (recipeId || recipeStack[0]))!}
-                            initialSubRecipeId={verticalInfoTriggerId || recipes.find(r => r.id === (recipeId || recipeStack[0]))!.ingredients.find(ing => ing.linkedRecipeId)?.linkedRecipeId || ''}
+                            initialSubRecipeId={verticalInfoTriggerId}
                             onClose={() => {
+                                setVerticalInfoTriggerId(null);
                                 setDisplayMode('stack');
+                            }}
+                            onCloseSubRecipe={() => {
                                 setVerticalInfoTriggerId(null);
                             }}
                             onIngredientClick={(id) => setVerticalInfoTriggerId(id)}
