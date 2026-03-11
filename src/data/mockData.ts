@@ -52,7 +52,7 @@ export const recipes: Recipe[] = [
         ingredients: [
             { name: 'Ramen Noodles', netQty: '120g', code: 'NP-01', yield: '100%' },
             { name: 'Pork Chashu', netQty: '2 slices', code: 'MT-05', yield: '100%', linkedRecipeId: 'chashu-prep' },
-            { name: 'Ajitsuke Tamago (Egg)', netQty: '1 pc', code: 'EG-02', yield: '100%' },
+            { name: 'Ajitsuke Tamago', netQty: '1 pc', code: 'EG-02', yield: '100%', linkedRecipeId: 'ajitama-prep' },
             { name: 'Nori (Seaweed)', netQty: '1 sheet', code: 'SW-01', yield: '100%' },
             { name: 'Scallions', netQty: '15g', code: 'VEG-11', yield: '100%' },
             { name: 'Shio Tare', netQty: '30ml', code: 'SAU-99', yield: '100%' },
@@ -400,5 +400,28 @@ export const recipes: Recipe[] = [
         allergens: ['Mustard'],
         prepTime: '24 hrs',
         calories: '45 kcal',
+    },
+    {
+        id: 'ajitama-prep',
+        serialNumber: 'SR-104',
+        name: 'Ajitsuke Tamago',
+        categoryId: 'appetizer',
+        image: 'https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&q=80&w=800',
+        ingredients: [
+            { name: 'Eggs', netQty: '6 pcs', code: 'EG-01', yield: '100%' },
+            { name: 'Soy Sauce', netQty: '100ml', code: 'SAU-01', yield: '100%' },
+            { name: 'Mirin', netQty: '100ml', code: 'SAU-02', yield: '100%' },
+            { name: 'Water', netQty: '300ml', code: 'H20-01', yield: '100%' },
+            { name: 'Sugar', netQty: '20g', code: 'SUG-01', yield: '100%' }
+        ],
+        instructions: [
+            { step: 1, text: 'Boil eggs for exactly 6 minutes and 30 seconds for a soft yolk.' },
+            { step: 2, text: 'Immediately transfer to an ice bath and peel when cool.' },
+            { step: 3, text: 'Combine soy sauce, mirin, water, and sugar in a saucepan and bring to a simmer. Let cool.' },
+            { step: 4, text: 'Marinate the peeled eggs in the liquid for at least 4 hours.' }
+        ],
+        allergens: ['Egg', 'Soy'],
+        prepTime: '4 hrs 20 mins',
+        calories: '80 kcal',
     }
 ];
